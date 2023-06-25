@@ -1,3 +1,25 @@
+# Steps:
+
+## wifi manager
+AP with http to:
+* configure SSID, password of Wi-Fi
+### Completed:
+* nvs configuration in c++
+* AP configuration in C
+### TO DO:
+* AP configuration in C++
+## http API
+* http API with needed parameters
+
+## After
+* bluetooth connection
+* pairing
+* authentication
+* http authentication
+* gpio logic
+* logs in C++, configurable by CMakeList or component, how in release?
+
+
 # _Sample project_
 
 (See the README.md file in the upper level 'examples' directory for more information about examples.)
