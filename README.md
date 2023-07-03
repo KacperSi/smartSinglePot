@@ -8,6 +8,8 @@ AP with http to:
 * AP configuration in C
 ### TO DO:
 * AP configuration in C++
+* endpoint to configure wifi
+* basic authentication of this endpoint
 ## http API
 * http API with needed parameters
 

@@ -82,6 +82,10 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "esp_wifi.h": "c",
-        "nvs_flash.h": "c"
+        "nvs_flash.h": "c",
+        "esp_netif.h": "c",
+        "cjson.h": "c",
+        "http_server.h": "c",
+        "wifi_manager.h": "c"
     },
 }
