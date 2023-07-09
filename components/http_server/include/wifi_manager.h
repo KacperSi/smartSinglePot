@@ -3,7 +3,6 @@
 
 #include "esp_log.h"
 #define ESP_DEVICE_ID      CONFIG_ESP_DEVICE_ID
-static const char *TAG = "wifi_manager";
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +36,7 @@ static httpd_handle_t start_webserver(void)
     config.lru_purge_enable = true;
 
     // Start the httpd server
-    ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
+    //ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
     if (httpd_start(&server, &config) == ESP_OK)
     {
         // Set URI handlers

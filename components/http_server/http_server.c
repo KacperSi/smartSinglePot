@@ -2,6 +2,8 @@
 #include "wifi_manager.h"
 #include "http_server.h"
 
+static const char *TAG = "http_server";
+
 esp_err_t http_error_handler(httpd_req_t *req, httpd_err_code_t err)
 {
     if (err == HTTPD_404_NOT_FOUND)
@@ -45,6 +47,7 @@ void disconnect_handler(void *arg, esp_event_base_t event_base,
 void connect_handler(void *arg, esp_event_base_t event_base,
                      int32_t event_id, void *event_data)
 {
+    ESP_LOGI(TAG, "connect_handler begin");
     httpd_handle_t *server = (httpd_handle_t *)arg;
     if (*server == NULL)
     {

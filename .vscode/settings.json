@@ -86,6 +86,11 @@
         "esp_netif.h": "c",
         "cjson.h": "c",
         "http_server.h": "c",
-        "wifi_manager.h": "c"
+        "wifi_manager.h": "c",
+        "wifi_station.h": "c",
+        "esp_http_server.h": "c",
+        "http_pot_api.h": "c",
+        "freertos.h": "c",
+        "err.h": "c"
     },
 }
