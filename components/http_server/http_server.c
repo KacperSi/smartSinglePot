@@ -1,6 +1,6 @@
 #include <esp_http_server.h>
-#include "wifi_manager.h"
 #include "http_server.h"
+#include "esp_log.h"
 
 static const char *TAG = "http_server";
 
@@ -54,4 +54,28 @@ void connect_handler(void *arg, esp_event_base_t event_base,
         ESP_LOGI(TAG, "Starting webserver");
         *server = start_webserver();
     }
+}
+
+httpd_handle_t start_webserver(void)
+{
+    httpd_handle_t server = NULL;
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.lru_purge_enable = true;
+
+    // Start the httpd server
+    //ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
+    if (httpd_start(&server, &config) == ESP_OK)
+    {
+        // Set URI handlers
+        //ESP_LOGI(TAG, "Registering URI handlers");
+        httpd_register_uri_handler(server, &hello);
+        httpd_register_uri_handler(server, &set_wifi);
+#if CONFIG_EXAMPLE_BASIC_AUTH
+        httpd_register_basic_auth(server);
+#endif
+        return server;
+    }
+
+    //ESP_LOGI(TAG, "Error starting server!");
+    return NULL;
 }

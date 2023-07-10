@@ -63,6 +63,8 @@ esp_err_t set_wifi_post_handler(httpd_req_t *req)
     {
         ESP_LOGI(TAG, "cred1: %s", cred1->valuestring);
         ESP_LOGI(TAG, "cred2: %s", cred2->valuestring);
+        printf("save creds here");
+        
     }
     else
     {
