@@ -4,7 +4,11 @@
 #include "esp_log.h"
 #include <cJSON.h>
 #include "wifi_manager.h"
+#include "esp_system.h"
+#include "nvs_flash.h"
+#include <string.h>
 
+extern httpd_handle_t server;
 static const char *TAG = "wifi_manager";
 
 /* An HTTP GET handler */
@@ -59,12 +63,15 @@ esp_err_t set_wifi_post_handler(httpd_req_t *req)
     cJSON *cred2 = cJSON_GetObjectItemCaseSensitive(json_data, "cred2");
 
     /* Log parsed values */
+    char SSID[32] = "";
+    char PASS[32] = "";
     if (cJSON_IsString(cred1) && cJSON_IsString(cred2))
     {
+        strcpy(SSID, cred1->valuestring);
+        strcpy(PASS, cred2->valuestring);
         ESP_LOGI(TAG, "cred1: %s", cred1->valuestring);
         ESP_LOGI(TAG, "cred2: %s", cred2->valuestring);
-        printf("save creds here");
-        
+
     }
     else
     {
@@ -77,6 +84,19 @@ esp_err_t set_wifi_post_handler(httpd_req_t *req)
 
     httpd_resp_set_status(req, HTTPD_200);
     httpd_resp_send_chunk(req, NULL, 0);
+
+    nvs_handle_t my_handle;
+    nvs_open("AP_data", NVS_READWRITE, &my_handle);
+    char *AP_SSID = SSID;
+    nvs_set_str(my_handle, "AP_SSID", AP_SSID);
+    printf("Write data: %s\n", AP_SSID);
+    char *AP_PASS = PASS;
+    nvs_set_str(my_handle, "AP_PASS", AP_PASS);
+    printf("Write data: %s\n", AP_PASS);
+    nvs_commit(my_handle);
+    nvs_close(my_handle);
+
+    esp_restart();
     return ESP_OK;
 }
 

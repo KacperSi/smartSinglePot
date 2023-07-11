@@ -91,6 +91,7 @@
         "esp_http_server.h": "c",
         "http_pot_api.h": "c",
         "freertos.h": "c",
-        "err.h": "c"
+        "err.h": "c",
+        "nvs.h": "c"
     },
 }
