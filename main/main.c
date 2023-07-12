@@ -6,39 +6,26 @@
 #include "wifi_station.h"
 #include "http_server.h"
 #include "http_pot_api.h"
+#include "flash_operations.h"
 
 
-bool AP_mode = false;
+bool AP_mode = false; //zmienna symulująca przycisk
 extern httpd_handle_t start_station_webserver();
-httpd_handle_t server;
 
 static const char *TAG = "main";
 
 
 void app_main(void)
 {
-    
-
-    server = NULL;
+    httpd_handle_t server = NULL;
     initialize_nvs_C();
 
-    nvs_handle_t my_handle;
-    nvs_open("AP_data", NVS_READWRITE, &my_handle);
-    size_t ssid_required_size = 0;
-    nvs_get_str(my_handle, "AP_SSID", NULL, &ssid_required_size);
-    char *AP_SSID = malloc(ssid_required_size);
-    nvs_get_str(my_handle, "AP_SSID", AP_SSID, &ssid_required_size);
-
-    size_t pass_required_size = 0;
-    nvs_get_str(my_handle, "AP_PASS", NULL, &pass_required_size);
-    char *AP_PASS = malloc(pass_required_size);
-    nvs_get_str(my_handle, "AP_PASS", AP_PASS, &pass_required_size);
-    nvs_close(my_handle);
+    char *AP_SSID = read_flash_str("AP_data", "AP_SSID");
+    char *AP_PASS = read_flash_str("AP_data", "AP_PASS");
 
     if((AP_SSID && AP_PASS) && !AP_mode){
         ESP_LOGI(TAG, "Access point credentials exist");
         ESP_LOGI(TAG, "Connecting to access point: %s", AP_SSID);
-        ESP_LOGI(TAG, "Pass: %s", AP_PASS);
 
         //WIFI_SERVER+API
         ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");

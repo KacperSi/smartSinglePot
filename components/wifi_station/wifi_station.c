@@ -1,8 +1,8 @@
 #include "wifi_station.h"
 #include "esp_log.h"
 
-#include "nvs.h"
 #include <string.h>
+#include "flash_operations.h"
 
 
 static const char *TAG = "station";
@@ -34,18 +34,8 @@ void wifi_init_sta(void)
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
 
-    nvs_handle_t my_handle;
-    nvs_open("AP_data", NVS_READWRITE, &my_handle);
-    size_t ssid_required_size = 0;
-    nvs_get_str(my_handle, "AP_SSID", NULL, &ssid_required_size);
-    char *AP_SSID = malloc(ssid_required_size);
-    nvs_get_str(my_handle, "AP_SSID", AP_SSID, &ssid_required_size);
-
-    size_t pass_required_size = 0;
-    nvs_get_str(my_handle, "AP_PASS", NULL, &pass_required_size);
-    char *AP_PASS = malloc(pass_required_size);
-    nvs_get_str(my_handle, "AP_PASS", AP_PASS, &pass_required_size);
-    nvs_close(my_handle);
+    char *AP_SSID = read_flash_str("AP_data", "AP_SSID");
+    char *AP_PASS = read_flash_str("AP_data", "AP_PASS");
 
     ESP_LOGI(TAG, "access point: %s", AP_SSID);
     ESP_LOGI(TAG, "Pass station: %s", AP_PASS);

@@ -5,10 +5,9 @@
 #include <cJSON.h>
 #include "wifi_manager.h"
 #include "esp_system.h"
-#include "nvs_flash.h"
 #include <string.h>
+#include "flash_operations.h"
 
-extern httpd_handle_t server;
 static const char *TAG = "wifi_manager";
 
 /* An HTTP GET handler */
@@ -85,16 +84,9 @@ esp_err_t set_wifi_post_handler(httpd_req_t *req)
     httpd_resp_set_status(req, HTTPD_200);
     httpd_resp_send_chunk(req, NULL, 0);
 
-    nvs_handle_t my_handle;
-    nvs_open("AP_data", NVS_READWRITE, &my_handle);
-    char *AP_SSID = SSID;
-    nvs_set_str(my_handle, "AP_SSID", AP_SSID);
-    printf("Write data: %s\n", AP_SSID);
-    char *AP_PASS = PASS;
-    nvs_set_str(my_handle, "AP_PASS", AP_PASS);
-    printf("Write data: %s\n", AP_PASS);
-    nvs_commit(my_handle);
-    nvs_close(my_handle);
+
+    write_flash_str("AP_data", "AP_SSID", SSID);
+    write_flash_str("AP_data", "AP_PASS", PASS);
 
     esp_restart();
     return ESP_OK;
