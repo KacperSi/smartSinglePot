@@ -12,6 +12,12 @@
 bool AP_mode = false; //zmienna symulująca przycisk
 extern httpd_handle_t start_station_webserver();
 
+// steps:
+// 1) encoding flash
+// 2) auth http
+// 2.1) posprzątać basic_auth
+// 2.2) dodać do AP
+// 3) auth bluetooth
 static const char *TAG = "main";
 
 

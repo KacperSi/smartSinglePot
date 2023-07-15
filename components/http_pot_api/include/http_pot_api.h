@@ -2,6 +2,8 @@
 #define SERVER_H
 
 #include "esp_log.h"
+#include <esp_event.h>
+#include <esp_http_server.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,7 +17,7 @@ static const httpd_uri_t hello = {
     .handler   = hello_get_handler_station,
     /* Let's pass response string in user
      * context to demonstrate it's usage */
-    .user_ctx  = "Hello World!"
+    .user_ctx  = NULL
 };
 
 /* An HTTP POST handler */

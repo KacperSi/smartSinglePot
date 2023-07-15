@@ -92,6 +92,7 @@
         "http_pot_api.h": "c",
         "freertos.h": "c",
         "err.h": "c",
-        "nvs.h": "c"
+        "nvs.h": "c",
+        "esp_tls_crypto.h": "c"
     },
 }
