@@ -5,25 +5,14 @@
 #include "http_pot_api.h"
 #include "basic_auth.h"
 
-
-// extern httpd_uri_t echo;
-
-extern esp_err_t basic_auth_middleware_handler(httpd_req_t *req, bool* auth_result);
+extern bool basic_authentication(httpd_req_t *req);
 extern void httpd_register_basic_auth(httpd_handle_t server);
 
 static const char *TAG = "http_pot_api";
 
-
-///////////////////////////////////////////////////////////////////////////////////
-
 esp_err_t hello_get_handler_station(httpd_req_t *req)
 {
-    bool auth_result;
-    esp_err_t auth_err = basic_auth_middleware_handler(req, &auth_result);
-    if(auth_err != ESP_OK){
-        return auth_err;
-    }
-    if(auth_result){
+    if(basic_authentication(req)){
 
         char*  buf;
         size_t buf_len;
@@ -98,8 +87,6 @@ esp_err_t hello_get_handler_station(httpd_req_t *req)
     return ESP_OK;
 }
 
-///////////////////////////////////////////////////////////////////////////////////
-
 /* An HTTP POST handler */
 esp_err_t echo_post_handler(httpd_req_t *req)
 {
@@ -144,10 +131,8 @@ httpd_handle_t start_station_webserver(void){
         ESP_LOGI(TAG, "Registering URI handlers");
         //httpd_register_uri_handler(server, &hello);
         httpd_register_uri_handler(server, &echo);
-        #if CONFIG_EXAMPLE_BASIC_AUTH
         httpd_register_basic_auth(server);
         httpd_register_uri_handler(server, &hello);
-        #endif
         return server;
     }
 

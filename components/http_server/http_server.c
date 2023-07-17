@@ -4,6 +4,8 @@
 
 static const char *TAG = "http_server";
 
+extern void httpd_register_basic_auth(httpd_handle_t server);
+
 esp_err_t http_error_handler(httpd_req_t *req, httpd_err_code_t err)
 {
     if (err == HTTPD_404_NOT_FOUND)
@@ -61,19 +63,17 @@ httpd_handle_t start_webserver(void)
     config.lru_purge_enable = true;
 
     // Start the httpd server
-    //ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
+    ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
     if (httpd_start(&server, &config) == ESP_OK)
     {
         // Set URI handlers
-        //ESP_LOGI(TAG, "Registering URI handlers");
-        httpd_register_uri_handler(server, &hello);
+        ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_uri_handler(server, &set_wifi);
-// #if CONFIG_EXAMPLE_BASIC_AUTH
-//         httpd_register_basic_auth(server);
-// #endif
+        httpd_register_basic_auth(server);
+        httpd_register_uri_handler(server, &hello);
         return server;
     }
 
-    //ESP_LOGI(TAG, "Error starting server!");
+    ESP_LOGI(TAG, "Error starting server!");
     return NULL;
 }

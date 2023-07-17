@@ -19,29 +19,15 @@ typedef struct {
 
 char *http_auth_basic(const char *username, const char *password);
 
-esp_err_t basic_auth_get_handler(httpd_req_t *req);
-
-
-esp_err_t basic_auth_middleware_handler(httpd_req_t *req, bool* auth_result);
-
-httpd_uri_t basic_auth = {
-    .uri       = "/basic_auth",
-    .method    = HTTP_GET,
-    .handler   = basic_auth_get_handler,
-};
+bool basic_authentication(httpd_req_t *req);
 
 void httpd_register_basic_auth(httpd_handle_t server);
 
 basic_auth_info_t *pass;
 
-
-
-
-
 #ifdef __cplusplus
 }
 #endif
-
 
 /* header file contents go here */
 

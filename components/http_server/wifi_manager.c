@@ -10,13 +10,16 @@
 
 static const char *TAG = "wifi_manager";
 
+extern bool basic_authentication(httpd_req_t *req);
+
 /* An HTTP GET handler */
 esp_err_t hello_get_handler(httpd_req_t *req)
 {
-    /* Send response with custom headers and ESP_DEVICE_ID*/
-    const char *resp_str = (const char *)ESP_DEVICE_ID;
-    httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
-
+    if(basic_authentication(req)){
+        /* Send response with custom headers and ESP_DEVICE_ID*/
+        const char *resp_str = (const char *)ESP_DEVICE_ID;
+        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+    }
     return ESP_OK;
 }
 
