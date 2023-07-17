@@ -23,7 +23,7 @@ bool basic_authentication(httpd_req_t *req);
 
 void httpd_register_basic_auth(httpd_handle_t server);
 
-basic_auth_info_t *pass;
+basic_auth_info_t *default_pass;
 
 #ifdef __cplusplus
 }

@@ -4,7 +4,7 @@
 
 static const char *TAG = "flash_operations";
 
-const char* read_flash_str(const char* storage, const char* key) {
+char* read_flash_str(const char* storage, const char* key) {
     nvs_handle_t my_handle;
     nvs_open(storage, NVS_READWRITE, &my_handle);
     size_t required_size = 0;

@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-const char* read_flash_str(const char* storage, const char* key);
+char* read_flash_str(const char* storage, const char* key);
 void write_flash_str(const char* storage, const char* key, char* value);
 
 #ifdef __cplusplus

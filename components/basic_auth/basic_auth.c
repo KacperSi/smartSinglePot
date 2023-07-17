@@ -1,6 +1,7 @@
 #include "basic_auth.h"
 #include "esp_log.h"
 #include <esp_tls_crypto.h>
+#include "flash_operations.h"
 
 static const char *TAG = "basic_auth";
 
@@ -36,7 +37,20 @@ bool basic_authentication(httpd_req_t *req)
 {
     char *buf = NULL;
     size_t buf_len = 0;
-    basic_auth_info_t *basic_auth_info = pass;
+
+    char *username = read_flash_str("BASIC_CRED", "username");
+    char *password = read_flash_str("BASIC_CRED", "password");
+
+    basic_auth_info_t *basic_auth_info = default_pass;
+
+    if(username && password){
+        basic_auth_info_t *changed_pass = calloc(1, sizeof(basic_auth_info_t));
+        if (changed_pass) {
+            changed_pass->username = username;
+            changed_pass->password = password;
+            basic_auth_info = changed_pass;
+        }
+    }
 
     buf_len = httpd_req_get_hdr_value_len(req, "Authorization") + 1;
     if (buf_len > 1) {
@@ -90,13 +104,10 @@ bool basic_authentication(httpd_req_t *req)
 
 void httpd_register_basic_auth(httpd_handle_t server)
 {
-    basic_auth_info_t *basic_auth_info = calloc(1, sizeof(basic_auth_info_t));
-    if (basic_auth_info) {
-        basic_auth_info->username = CONFIG_EXAMPLE_BASIC_AUTH_USERNAME;
-        basic_auth_info->password = CONFIG_EXAMPLE_BASIC_AUTH_PASSWORD;
-
-        //pasy powinny być odczytywane z pamięci zamiast trzymane w strukturze jak teraz
-        pass = basic_auth_info;
+    basic_auth_info_t *default_basic_auth_info = calloc(1, sizeof(basic_auth_info_t));
+    if (default_basic_auth_info) {
+        default_basic_auth_info->username = CONFIG_EXAMPLE_BASIC_AUTH_USERNAME;
+        default_basic_auth_info->password = CONFIG_EXAMPLE_BASIC_AUTH_PASSWORD;
+        default_pass = default_basic_auth_info;
     }
 }
-

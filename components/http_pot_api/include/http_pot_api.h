@@ -32,6 +32,14 @@ static const httpd_uri_t echo = {
 
 httpd_handle_t start_station_webserver(void);
 
+esp_err_t change_pass_handler(httpd_req_t *req);
+
+static const httpd_uri_t change_pass = {
+    .uri       = "/change_pass",
+    .method    = HTTP_POST,
+    .handler   = change_pass_handler,
+};
+
 #ifdef __cplusplus
 }
 #endif
