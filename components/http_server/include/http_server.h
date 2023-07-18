@@ -9,8 +9,6 @@
 extern "C" {
 #endif
 
-esp_err_t http_error_handler(httpd_req_t *req, httpd_err_code_t err);
-
 esp_err_t stop_webserver(httpd_handle_t server);
 
 void disconnect_server(httpd_handle_t* server);

@@ -87,14 +87,14 @@ menu "Example Configuration"
             Note that, Basic Authentication is not encrypted channel and also easy to retrieve
             credentials as they are sent in plain text format.
 
-    config EXAMPLE_BASIC_AUTH_USERNAME
+    config DEFAULT_BASIC_AUTH_USERNAME
         string "Basic Authenticate User Name"
         depends on EXAMPLE_BASIC_AUTH
         default "ESP32"
         help
             The client's user name which used for basic authenticate.
 
-    config EXAMPLE_BASIC_AUTH_PASSWORD
+    config DEFAULT_BASIC_AUTH_PASSWORD
         string "Basic Authenticate Password"
         depends on EXAMPLE_BASIC_AUTH
         default "ESP32Webserver"

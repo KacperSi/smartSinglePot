@@ -106,8 +106,8 @@ void httpd_register_basic_auth(httpd_handle_t server)
 {
     basic_auth_info_t *default_basic_auth_info = calloc(1, sizeof(basic_auth_info_t));
     if (default_basic_auth_info) {
-        default_basic_auth_info->username = CONFIG_EXAMPLE_BASIC_AUTH_USERNAME;
-        default_basic_auth_info->password = CONFIG_EXAMPLE_BASIC_AUTH_PASSWORD;
+        default_basic_auth_info->username = CONFIG_DEFAULT_BASIC_AUTH_USERNAME;
+        default_basic_auth_info->password = CONFIG_DEFAULT_BASIC_AUTH_PASSWORD;
         default_pass = default_basic_auth_info;
     }
 }

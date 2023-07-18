@@ -1,26 +1,11 @@
 #include <esp_http_server.h>
 #include "http_server.h"
 #include "esp_log.h"
+#include "common.h"
 
 static const char *TAG = "http_server";
 
 extern void httpd_register_basic_auth(httpd_handle_t server);
-
-esp_err_t http_error_handler(httpd_req_t *req, httpd_err_code_t err)
-{
-    if (err == HTTPD_404_NOT_FOUND)
-    {
-        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "{\"message\": \"Not found.\"}");
-        return ESP_FAIL;
-    }
-    else if (err == HTTPD_400_BAD_REQUEST)
-    {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "{\"message\": \"Wrong data.\"}");
-        return ESP_FAIL;
-    }
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "{\"message\": \"Error on server side.\"}");
-    return ESP_FAIL;
-}
 
 esp_err_t stop_webserver(httpd_handle_t server)
 {

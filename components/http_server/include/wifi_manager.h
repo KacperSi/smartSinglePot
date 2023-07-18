@@ -43,9 +43,7 @@ extern "C" {
 //         //ESP_LOGI(TAG, "Registering URI handlers");
 //         httpd_register_uri_handler(server, &hello);
 //         httpd_register_uri_handler(server, &set_wifi);
-// #if CONFIG_EXAMPLE_BASIC_AUTH
 //         httpd_register_basic_auth(server);
-// #endif
 //         return server;
 //     }
 

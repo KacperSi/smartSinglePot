@@ -6,11 +6,13 @@
 #include "basic_auth.h"
 #include <cJSON.h>
 #include "flash_operations.h"
+#include "common.h"
 
 extern bool basic_authentication(httpd_req_t *req);
 extern void httpd_register_basic_auth(httpd_handle_t server);
 
 static const char *TAG = "http_pot_api";
+extern esp_err_t http_error_handler(httpd_req_t *req, httpd_err_code_t err);
 
 esp_err_t hello_get_handler_station(httpd_req_t *req)
 {
@@ -152,9 +154,7 @@ esp_err_t change_pass_handler(httpd_req_t *req)
         int ret, actual_length = req->content_len;
         if (actual_length > sizeof(buf))
         {
-            //http_error_handler(req, HTTPD_400_BAD_REQUEST); //to powinno być odkomentowane
-            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "{\"message\": \"Wrong data.\"}");
-            return ESP_FAIL;
+            http_error_handler(req, HTTPD_400_BAD_REQUEST);
         }
         int recv_data_length = MIN(actual_length, sizeof(buf));
         
@@ -182,9 +182,7 @@ esp_err_t change_pass_handler(httpd_req_t *req)
         if (json_data == NULL)
         {
             ESP_LOGE(TAG, "Failed to parse JSON data");
-            //http_error_handler(req, HTTPD_400_BAD_REQUEST); //to powinno być odkomentowane
-            httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "{\"message\": \"Wrong data.\"}");
-            return ESP_FAIL;
+            http_error_handler(req, HTTPD_400_BAD_REQUEST);
         }
 
         /* Retrieve values from JSON */
@@ -205,8 +203,7 @@ esp_err_t change_pass_handler(httpd_req_t *req)
         else
         {
             ESP_LOGE(TAG, "Failed to retrieve values from JSON");
-            //http_error_handler(req, HTTPD_400_BAD_REQUEST);  //to powinno być odkomentowane
-            //to powinno być odkomentowane
+            http_error_handler(req, HTTPD_400_BAD_REQUEST);
         }
 
         /* Free allocated JSON object */

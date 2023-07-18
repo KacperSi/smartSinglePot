@@ -11,6 +11,7 @@
 static const char *TAG = "wifi_manager";
 
 extern bool basic_authentication(httpd_req_t *req);
+extern esp_err_t http_error_handler(httpd_req_t *req, httpd_err_code_t err);
 
 /* An HTTP GET handler */
 esp_err_t hello_get_handler(httpd_req_t *req)
