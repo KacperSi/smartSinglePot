@@ -7,6 +7,7 @@
 #include <cJSON.h>
 #include "flash_operations.h"
 #include "common.h"
+#include <string.h>
 
 extern bool basic_authentication(httpd_req_t *req);
 extern void httpd_register_basic_auth(httpd_handle_t server);
@@ -91,6 +92,17 @@ esp_err_t hello_get_handler_station(httpd_req_t *req)
     return ESP_OK;
 }
 
+esp_err_t pub_key_get_handler(httpd_req_t *req)
+{
+    // to zapytanie ma być niezabezpieczone
+    char *key = "klucz";
+    cJSON *json_resp = cJSON_CreateObject();
+    cJSON_AddStringToObject(json_resp, "key", key);
+    char *resp_str = cJSON_PrintUnformatted(json_resp);
+    httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
 /* An HTTP POST handler */
 esp_err_t echo_post_handler(httpd_req_t *req)
 {
@@ -140,6 +152,7 @@ httpd_handle_t start_station_webserver(void){
         httpd_register_basic_auth(server);
         httpd_register_uri_handler(server, &change_pass);
         httpd_register_uri_handler(server, &hello);
+        httpd_register_uri_handler(server, &pub_key);
         return server;
     }
 
@@ -218,3 +231,25 @@ esp_err_t change_pass_handler(httpd_req_t *req)
     }
     return ESP_OK;
 }
+
+// do screena
+
+// httpd_handle_t start_station_webserver(void){
+//     httpd_handle_t server = NULL;
+//     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+//     config.lru_purge_enable = true;
+
+//     // Start the httpd server
+//     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
+//     if (httpd_start(&server, &config) == ESP_OK) {
+//         ESP_LOGI(TAG, "Registering URI handlers");
+//         httpd_register_basic_auth(server);
+//         httpd_register_uri_handler(server, &set_wifi);
+//         httpd_register_uri_handler(server, &get_hostname);
+//         httpd_register_uri_handler(server, &pub_key);
+//         return server;
+//     }
+
+//     ESP_LOGI(TAG, "Error starting server!");
+//     return NULL;
+// }

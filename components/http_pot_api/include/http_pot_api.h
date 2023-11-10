@@ -40,6 +40,15 @@ static const httpd_uri_t change_pass = {
     .handler   = change_pass_handler,
 };
 
+esp_err_t pub_key_get_handler(httpd_req_t *req);
+
+static const httpd_uri_t pub_key = {
+    .uri       = "/pub_key",
+    .method    = HTTP_GET,
+    .handler   = pub_key_get_handler,
+    .user_ctx  = NULL
+};
+
 #ifdef __cplusplus
 }
 #endif

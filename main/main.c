@@ -19,6 +19,7 @@ void app_main(void)
 {
     httpd_handle_t server = NULL;
     initialize_nvs_C();
+    //start_security_BLE(); do screena
 
     char *AP_SSID = read_flash_str("AP_data", "AP_SSID");
     char *AP_PASS = read_flash_str("AP_data", "AP_PASS");
@@ -36,6 +37,9 @@ void app_main(void)
         //ACCESS_POINT
         ESP_LOGI(TAG, "ESP_WIFI_MODE_AP");
         wifi_init_softap();
-        ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &connect_handler, &server));
+        ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT,
+                                                   IP_EVENT_AP_STAIPASSIGNED,
+                                                   &connect_handler,
+                                                   &server));
     }
 }
