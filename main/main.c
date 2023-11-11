@@ -7,10 +7,12 @@
 #include "http_server.h"
 #include "http_pot_api.h"
 #include "flash_operations.h"
+#include "ble_security_gatts.h"
 
 
 bool AP_mode = false; //zmienna symulująca przycisk
 extern httpd_handle_t start_station_webserver();
+extern void start_security_BLE();
 
 static const char *TAG = "main";
 
@@ -19,7 +21,7 @@ void app_main(void)
 {
     httpd_handle_t server = NULL;
     initialize_nvs_C();
-    //start_security_BLE(); do screena
+    start_security_BLE();
 
     char *AP_SSID = read_flash_str("AP_data", "AP_SSID");
     char *AP_PASS = read_flash_str("AP_data", "AP_PASS");

@@ -4,20 +4,28 @@
 #include <esp_http_server.h>
 #include "http_pot_api.h"
 #include "basic_auth.h"
+#include "auth2uuid.h"
 #include <cJSON.h>
 #include "flash_operations.h"
 #include "common.h"
 #include <string.h>
 
+extern uint8_t sUUIDValue[4];
+
 extern bool basic_authentication(httpd_req_t *req);
+extern bool auth2uuid_authentication(httpd_req_t *req);
 extern void httpd_register_basic_auth(httpd_handle_t server);
 
 static const char *TAG = "http_pot_api";
 extern esp_err_t http_error_handler(httpd_req_t *req, httpd_err_code_t err);
 
+bool twoFactorsAuth(httpd_req_t *req){
+    return auth2uuid_authentication(req) && basic_authentication(req);
+}
+
 esp_err_t hello_get_handler_station(httpd_req_t *req)
 {
-    if(basic_authentication(req)){
+    if(twoFactorsAuth(req)){
 
         char*  buf;
         size_t buf_len;
@@ -81,6 +89,13 @@ esp_err_t hello_get_handler_station(httpd_req_t *req)
         /* Send response with custom headers and body set as the
         * string passed in user context*/
         //const char* resp_str = (const char*) req->user_ctx;
+        // ESP_LOGI(TAG, "Downloaded sUUIDValue: %02x %02x %02x %02x", sUUIDValue[0], sUUIDValue[1], sUUIDValue[2], sUUIDValue[3]);
+        char suuid_str[9]; // 4 bajty * 2 znaki każdy + 1 znak null-terminator
+        snprintf(suuid_str, sizeof(suuid_str), "%02x%02x%02x%02x",
+                 sUUIDValue[0], sUUIDValue[1],
+                 sUUIDValue[2], sUUIDValue[3]);
+        // ESP_LOGI(TAG, "suuid_str: %s", suuid_str);
+        httpd_resp_set_hdr(req, "UUID", suuid_str);
         httpd_resp_send(req, "tera git", HTTPD_RESP_USE_STRLEN);
 
         /* After sending the HTTP response the old HTTP request
@@ -231,25 +246,3 @@ esp_err_t change_pass_handler(httpd_req_t *req)
     }
     return ESP_OK;
 }
-
-// do screena
-
-// httpd_handle_t start_station_webserver(void){
-//     httpd_handle_t server = NULL;
-//     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-//     config.lru_purge_enable = true;
-
-//     // Start the httpd server
-//     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
-//     if (httpd_start(&server, &config) == ESP_OK) {
-//         ESP_LOGI(TAG, "Registering URI handlers");
-//         httpd_register_basic_auth(server);
-//         httpd_register_uri_handler(server, &set_wifi);
-//         httpd_register_uri_handler(server, &get_hostname);
-//         httpd_register_uri_handler(server, &pub_key);
-//         return server;
-//     }
-
-//     ESP_LOGI(TAG, "Error starting server!");
-//     return NULL;
-// }

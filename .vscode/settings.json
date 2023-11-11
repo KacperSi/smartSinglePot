@@ -94,6 +94,7 @@
         "err.h": "c",
         "nvs.h": "c",
         "esp_tls_crypto.h": "c",
-        "flash_operations.h": "c"
+        "flash_operations.h": "c",
+        "auth2uuid.h": "c"
     },
 }
