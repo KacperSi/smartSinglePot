@@ -12,7 +12,7 @@
 #include "spiffs_config.h"
 
 
-bool AP_mode = false; //zmienna symulująca przycisk
+bool AP_mode = true; //zmienna symulująca przycisk
 extern httpd_handle_t start_station_webserver();
 extern void start_security_BLE();
 extern void config_spiffs();
