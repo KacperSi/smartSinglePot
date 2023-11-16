@@ -95,6 +95,12 @@
         "nvs.h": "c",
         "esp_tls_crypto.h": "c",
         "flash_operations.h": "c",
-        "auth2uuid.h": "c"
+        "auth2uuid.h": "c",
+        "esp_event.h": "c",
+        "gpio_config.h": "c",
+        "esp_adc_cal.h": "c",
+        "task.h": "c",
+        "esp_spiffs.h": "c",
+        "rsa_operations.h": "c"
     },
 }

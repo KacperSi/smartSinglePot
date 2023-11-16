@@ -100,4 +100,15 @@ menu "Example Configuration"
         default "ESP32Webserver"
         help
             The client's password which used for basic authenticate.
+
+    config DEVICE_HOSTNAME
+        string "Device hostname in home network"
+        default "singlepot1"
+        help
+            The client's password which used for basic authenticate.
+
+    config BASIC_AUTH_MODE
+        bool "Basic Authentication"
+        default y
+
 endmenu

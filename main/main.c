@@ -8,17 +8,22 @@
 #include "http_pot_api.h"
 #include "flash_operations.h"
 #include "ble_security_gatts.h"
+#include "gpio_config.h"
+#include "spiffs_config.h"
 
 
 bool AP_mode = false; //zmienna symulująca przycisk
 extern httpd_handle_t start_station_webserver();
 extern void start_security_BLE();
+extern void config_spiffs();
 
 static const char *TAG = "main";
 
 
 void app_main(void)
 {
+    config_spiffs();
+    gpio_init();
     httpd_handle_t server = NULL;
     initialize_nvs_C();
     start_security_BLE();

@@ -16,6 +16,7 @@ uint8_t sUUIDValue[4] = {0x00, 0x00, 0x00, 0x00};
 bool auth2uuid_authentication(httpd_req_t *req);
 void httpd_register_auth2uuid(httpd_handle_t server);
 void reset_dUUIDValue();
+void get_suuid_str(char *suuid_str);
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,109 @@
+#include <stdio.h>
+#include "gpio_config.h"
+#include "driver/gpio.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <inttypes.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "driver/gpio.h"
+#include "driver/adc.h"
+#include <esp_log.h>
+
+static const char *TAG = "gpio_config";
+
+static QueueHandle_t gpio_evt_queue = NULL;
+
+static void IRAM_ATTR gpio_input_handler(void* arg)
+{
+    uint32_t gpio_num = (uint32_t) arg;
+    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+}
+
+int calculate_humidity_percent(int adc_value){
+    int humidity_percent = 100 - ((adc_value - HUMIDTY_VOLT_MIN) / HUMIDTY_VOLT_PITCH);
+    if(humidity_percent > 100){
+        return 100;
+    }
+    if(humidity_percent < 0){
+        return 0;
+    }
+    return humidity_percent;
+}
+
+int get_soil_humidity_value(){
+    int adc_value = adc1_get_raw(ADC1_CHANNEL_6);
+    int humidity = calculate_humidity_percent(adc_value);
+    ESP_LOGI(TAG, "humidity: %d", humidity);
+    return humidity;
+}
+
+static void watering_button_handler(int state){
+    if(state){
+        gpio_set_level(PUMP_PIN, 0);
+    }
+    else{
+        get_soil_humidity_value();
+    }
+}
+
+static void water_level_handler(int state){
+    water_level_state = state;
+    if(state){
+        gpio_set_level(INFO_LED, 0);
+    }
+    else{
+        gpio_set_level(INFO_LED, 1);
+    }
+}
+
+static void gpio_task(void* arg)
+{
+    uint32_t io_num;
+    for(;;) {
+        if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+            //ESP_LOGI(TAG, "GPIO[%"PRIu32"] intr, val: %d", io_num, gpio_get_level(io_num));
+            if(io_num == WATERING_BUTTON){
+                watering_button_handler(gpio_get_level(io_num));
+            }
+            if(io_num == WATER_LEVEL_SENSOR){
+                water_level_handler(gpio_get_level(io_num));
+            }
+            if(io_num == AP_BUTTON){
+                ESP_LOGI(TAG, "AP_BUTTON ACTION");
+            }
+            if(io_num == BLE_BUTTON){
+                ESP_LOGI(TAG, "BLE_BUTTON ACTION");
+            }
+        }
+    }
+}
+
+void gpio_init(){
+    gpio_set_direction(PUMP_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_direction(WATER_LEVEL_SENSOR, GPIO_MODE_INPUT);
+    gpio_set_direction(INFO_LED, GPIO_MODE_OUTPUT);
+
+    gpio_config_t io_conf = {
+        .pin_bit_mask = (1ULL << WATERING_BUTTON) | (1ULL << WATER_LEVEL_SENSOR) | (1ULL << AP_BUTTON) | (1ULL << BLE_BUTTON),
+        .mode = GPIO_MODE_INPUT,
+        .intr_type = GPIO_INTR_POSEDGE,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+    };
+    gpio_config(&io_conf);
+    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    xTaskCreate(gpio_task, "gpio_task", 2048, NULL, 10, NULL);
+    // Instalacja obsługi przerwań
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(WATERING_BUTTON, gpio_input_handler, (void*) WATERING_BUTTON);
+    gpio_isr_handler_add(WATER_LEVEL_SENSOR, gpio_input_handler, (void*) WATER_LEVEL_SENSOR);
+    gpio_isr_handler_add(AP_BUTTON, gpio_input_handler, (void*) AP_BUTTON);
+    gpio_isr_handler_add(BLE_BUTTON, gpio_input_handler, (void*) BLE_BUTTON);
+
+    adc1_config_width(ADC_WIDTH_BIT_DEFAULT);
+    adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_11);
+}

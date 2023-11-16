@@ -5,6 +5,13 @@ static const char *TAG = "auth2uuid";
 
 #define HTTPD_401      "401 UNAUTHORIZED"           /*!< HTTP Response 401 */
 
+void get_suuid_str(char *suuid_str)
+{
+    snprintf(suuid_str, 9, "%02x%02x%02x%02x",
+             sUUIDValue[0], sUUIDValue[1],
+             sUUIDValue[2], sUUIDValue[3]);
+}
+
 void reset_dUUIDValue() {
     dUUIDValue[0] = 0x00;
     dUUIDValue[1] = 0x00;
