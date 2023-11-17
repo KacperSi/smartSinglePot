@@ -14,6 +14,8 @@ void write_flash_int(const char *storage, const char *key, int value);
 int read_flash_int(const char *storage, const char *key);
 void save_pot_rsa_key_to_flash(mbedtls_rsa_context *rsa);
 void read_pot_rsa_key_from_flash(mbedtls_rsa_context *rsa);
+bool read_flash_bool(const char *storage, const char *key);
+void save_flash_bool(const char *storage, const char *key, bool value);
 
 #ifdef __cplusplus
 }

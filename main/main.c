@@ -11,8 +11,7 @@
 #include "gpio_config.h"
 #include "spiffs_config.h"
 
-
-bool AP_mode = false; //zmienna symulująca przycisk
+extern bool read_flash_bool(const char *storage, const char *key);
 extern httpd_handle_t start_station_webserver();
 extern void start_security_BLE();
 extern void config_spiffs();
@@ -23,10 +22,12 @@ static const char *TAG = "main";
 void app_main(void)
 {
     config_spiffs();
-    gpio_init();
     httpd_handle_t server = NULL;
     initialize_nvs_C();
+    gpio_init();
     start_security_BLE();
+
+    bool AP_mode = read_flash_bool("modes", "ap_mode");
 
     char *AP_SSID = read_flash_str("AP_data", "AP_SSID");
     char *AP_PASS = read_flash_str("AP_data", "AP_PASS");
@@ -39,6 +40,7 @@ void app_main(void)
         ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
         wifi_init_sta();
         server = start_station_webserver();
+        watering_config();
     }
     else{
         //ACCESS_POINT

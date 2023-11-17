@@ -2,7 +2,6 @@
 #include "esp_mac.h"
 #include "esp_wifi.h"
 #include "esp_log.h"
-
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
@@ -39,10 +38,10 @@ void wifi_init_softap(void)
 
     wifi_config_t wifi_config = {
         .ap = {
-            .ssid = ESP_WIFI_SSID,
-            .ssid_len = strlen(ESP_WIFI_SSID),
+            .ssid = "smartPot",
+            .ssid_len = strlen("smartPot"),
             .channel = ESP_WIFI_CHANNEL,
-            .password = ESP_WIFI_PASS,
+            .password = "smartPotStrongKnot",
             .max_connection = MAX_STA_CONN,
             .authmode = WIFI_AUTH_WPA_WPA2_PSK,
             .pmf_cfg = {

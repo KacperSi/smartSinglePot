@@ -519,7 +519,7 @@ void start_security_BLE()
     uint8_t init_key = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
     uint8_t rsp_key = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
     //set static passkey
-    uint32_t passkey = 123456;
+    uint32_t passkey = 671892;
     uint8_t auth_option = ESP_BLE_ONLY_ACCEPT_SPECIFIED_AUTH_DISABLE;
     uint8_t oob_support = ESP_BLE_OOB_DISABLE;
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_STATIC_PASSKEY, &passkey, sizeof(uint32_t));

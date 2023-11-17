@@ -1,6 +1,7 @@
 #include "flash_operations.h"
 #include <string.h>
 #include "esp_log.h"
+#include "stdbool.h"
 
 static const char *TAG = "flash_operations";
 
@@ -61,10 +62,12 @@ void write_flash_str(const char *storage, const char *key, char *value) {
     if (err == ESP_OK) {
         err = nvs_set_str(my_handle, key, value);
         if (err == ESP_OK) {
-            ESP_LOGI(TAG, "Write data to flash memory: %s", value);
             err = nvs_commit(my_handle);
             if (err != ESP_OK) {
                 ESP_LOGE(TAG, "Error committing flash write: %s", esp_err_to_name(err));
+            }
+            else{
+                ESP_LOGI(TAG, "Data written correctly");
             }
         } else {
             ESP_LOGE(TAG, "Error writing flash value: %s", esp_err_to_name(err));
@@ -82,10 +85,12 @@ void write_flash_int(const char *storage, const char *key, int value) {
     if (err == ESP_OK) {
         err = nvs_set_i32(my_handle, key, value);
         if (err == ESP_OK) {
-            ESP_LOGI(TAG, "Write data to flash memory: %d", value);
             err = nvs_commit(my_handle);
             if (err != ESP_OK) {
                 ESP_LOGE(TAG, "Error committing flash write: %s", esp_err_to_name(err));
+            }
+            else{
+                ESP_LOGI(TAG, "Data written correctly");
             }
         } else {
             ESP_LOGE(TAG, "Error writing flash value: %s", esp_err_to_name(err));
@@ -163,5 +168,42 @@ void read_pot_rsa_key_from_flash(mbedtls_rsa_context *rsa)
     else
     {
         ESP_LOGE(TAG, "Error opening flash storage");
+    }
+}
+
+bool read_flash_bool(const char *storage, const char *key) {
+    nvs_handle_t my_handle;
+    if (nvs_open(storage, NVS_READWRITE, &my_handle) == ESP_OK) {
+        bool value = false;    
+        esp_err_t err = nvs_get_u8(my_handle, key, (uint8_t*)&value);
+        if (err == ESP_OK) {
+            nvs_close(my_handle);
+            return value;
+        } else {
+            ESP_LOGE(TAG, "Error reading flash value: %s", esp_err_to_name(err));
+        }
+        nvs_close(my_handle);
+    } else {
+        ESP_LOGE(TAG, "Error opening flash storage");
+    }
+    return true;
+}
+
+void save_flash_bool(const char *storage, const char *key, bool value) {
+    nvs_handle_t my_handle;
+    esp_err_t err = nvs_open(storage, NVS_READWRITE, &my_handle);
+
+    if (err == ESP_OK) {
+        err = nvs_set_u8(my_handle, key, (uint8_t)value);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Error writing flash value: %s", esp_err_to_name(err));
+        }
+        err = nvs_commit(my_handle);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Error committing flash write: %s", esp_err_to_name(err));
+        }
+        nvs_close(my_handle);
+    } else {
+        ESP_LOGE(TAG, "Error opening flash storage: %s", esp_err_to_name(err));
     }
 }

@@ -33,13 +33,13 @@ menu "Example Configuration"
 
     config ESP_WIFI_SSID_STATION
         string "WiFi SSID"
-        default ""
+        default "smartPot"
         help
             SSID (network name) for the example to connect to.
 
     config ESP_WIFI_PASSWORD_STATION
         string "WiFi Password"
-        default ""
+        default "smartPotStrongKnot"
         help
             WiFi password (WPA or WPA2) for the example to use.
         

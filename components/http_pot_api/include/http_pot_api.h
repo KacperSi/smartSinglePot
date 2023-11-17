@@ -5,7 +5,7 @@
 #include <esp_event.h>
 #include <esp_http_server.h>
 
-#define BASIC_AUTH_MODE      false
+#define BASIC_AUTH_MODE      true
 #define UUID_AUTH_MODE      false
 
 #ifdef __cplusplus

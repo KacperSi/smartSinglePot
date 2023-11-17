@@ -1,8 +1,8 @@
 #include "wifi_station.h"
 #include "esp_log.h"
-
 #include <string.h>
 #include "flash_operations.h"
+#include "sntp_config.h"
 
 
 static const char *TAG = "station";
@@ -70,6 +70,7 @@ void wifi_init_sta(void)
     } else {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
+    sntp_config();
 }
 
 void event_handler(void* arg, esp_event_base_t event_base,
