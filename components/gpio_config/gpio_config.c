@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "gpio_config.h"
+#include "flash_operations.h"
+#include "sntp_config.h"
 
 static const char *TAG = "gpio_config";
 
@@ -32,11 +34,11 @@ int get_soil_humidity_value(){
 static void watering_button_handler(int state){
     if(state){
         gpio_set_level(PUMP_PIN, 0);
-        ESP_LOGI(TAG, "gpio_set_level(PUMP_PIN, 0);");
+        // ESP_LOGI(TAG, "gpio_set_level(PUMP_PIN, 0);");
     }
     else{
         gpio_set_level(PUMP_PIN, 1);
-        ESP_LOGI(TAG, "gpio_set_level(PUMP_PIN, 1);");
+        // ESP_LOGI(TAG, "gpio_set_level(PUMP_PIN, 1);");
     }
 }
 
@@ -146,9 +148,53 @@ void gpio_init(){
     adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_11);
 }
 
+static void watering_time_countdown(void* arg)
+{
+    int watering_max_time = read_flash_int("wat_settings", "wat_max_time");
+    vTaskDelay(pdMS_TO_TICKS(watering_max_time * 1000));
+    watering_max_time_passed = true;
+    gpio_set_level(PUMP_PIN, 0);
+    // ESP_LOGI(TAG, "PUMP STOP!");
+    vTaskDelete(NULL);
+}
 
-void watering_timer_callback(TimerHandle_t xTimer) {
+void watering_timer_callback(TimerHandle_t xTimer)
+{
     ESP_LOGI(TAG, "Watering timer callback");
+    char *watering_time = read_flash_str("wat_settings", "wat_time");
+    ESP_LOGI(TAG, "Watering time: %s", watering_time);
+    char current_time[6];
+    get_time(current_time, sizeof(current_time));
+    ESP_LOGI(TAG, "Current time is: %s", current_time);
+    bool time_correct = (strcmp(current_time, watering_time) == 0);
+    if (time_correct)
+    {
+        ESP_LOGI(TAG, "Watering Time!");
+        int moisture_max = read_flash_int("wat_settings", "moisture_max");
+        int moisture_min = read_flash_int("wat_settings", "moisture_min");
+        ESP_LOGI(TAG, "Moisture max: %d", moisture_max);
+        ESP_LOGI(TAG, "Moisture min: %d", moisture_min);
+        int current_moisture = get_soil_humidity_value();
+        ESP_LOGI(TAG, "Current moisture: %d", current_moisture);
+        bool moisture_need_watering = ((current_moisture < moisture_min) && (!(current_moisture > moisture_max)));
+        watering_max_time_passed = false;
+        bool watering_needed = (moisture_need_watering && !watering_max_time_passed);
+        if(watering_needed){
+            xTaskCreate(watering_time_countdown, "watering_time_countdown", 2048, NULL, 10, NULL);
+        }
+        while (watering_needed)
+        {
+            // ESP_LOGI(TAG, "PUMP RUN!");
+            gpio_set_level(PUMP_PIN, 1);
+            fflush(stdout);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            current_moisture = get_soil_humidity_value();
+            moisture_need_watering = ((current_moisture < moisture_min) && (!(current_moisture > moisture_max)));
+            watering_needed = (moisture_need_watering && !watering_max_time_passed);
+        }
+        // ESP_LOGI(TAG, "PUMP STOP!");
+        gpio_set_level(PUMP_PIN, 0);
+    }
 }
 
 void watering_config(){

@@ -269,7 +269,7 @@ esp_err_t encode_test_handler(httpd_req_t *req)
 
         //encode_decode_test();
         gen_key();
-        encode_rsa_by_pot_key();
+        // encode_rsa_by_pot_key();
 
         httpd_resp_set_status(req, HTTPD_200);
         char *response = "poki co nic"; //generacja

@@ -14,22 +14,24 @@
 
 static const char *TAG = "sntp_config";
 
+void get_time(char *time_str, size_t size)
+{
+    time_t now;
+    struct tm timeinfo;
+    time(&now);
+    setenv("TZ", "UTC-1", 1);
+    tzset();
+    localtime_r(&now, &timeinfo);
+    strftime(time_str, size, "%H:%M", &timeinfo);
+}
+
 void time_sync_notification_cb(struct timeval *tv)
 {
     ESP_LOGI(TAG, "Time has been synchronized");
 
-    time_t now;
-    char strftime_buf[64];
-    struct tm timeinfo;
-
-    time(&now);
-    // Set timezone to China Standard Time
-    setenv("TZ", "UTC-1", 1);
-    tzset();
-
-    localtime_r(&now, &timeinfo);
-    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(TAG, "The current time is: %s", strftime_buf);
+    // char current_time[6];
+    // get_time(current_time, sizeof(current_time));
+    // ESP_LOGI(TAG, "Current time is: %s", current_time);
 }
 
 void sntp_config()

@@ -33,6 +33,7 @@ extern "C" {
 
 static int water_level_state;
 static bool AP_mode_gpio;
+static bool watering_max_time_passed;
 
 void gpio_init();
 static void gpio_input_handler(void* arg);

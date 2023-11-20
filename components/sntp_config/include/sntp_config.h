@@ -9,6 +9,7 @@ extern "C" {
 
 void sntp_config();
 void time_sync_notification_cb(struct timeval *tv);
+void get_time(char *time_str, size_t size);
 
 #ifdef __cplusplus
 }

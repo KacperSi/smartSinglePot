@@ -10,7 +10,6 @@
 #include "common.h"
 #include <string.h>
 #include <regex.h>
-#include "flash_operations.h"
 #include "driver/gpio.h"
 #include "gpio_config.h"
 #include "rsa_operations.h"
@@ -328,7 +327,7 @@ httpd_handle_t start_station_webserver(void){
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.lru_purge_enable = true;
-    config.stack_size = 7168;
+    config.stack_size = 10240;
 
     // Start the httpd server
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
@@ -338,13 +337,13 @@ httpd_handle_t start_station_webserver(void){
         httpd_register_basic_auth(server);
         httpd_register_uri_handler(server, &change_pass);
         httpd_register_uri_handler(server, &get_soil_moisture);
-        httpd_register_uri_handler(server, &get_water_level);
-        httpd_register_uri_handler(server, &set_watering);
-        httpd_register_uri_handler(server, &get_watering);
-        httpd_register_uri_handler(server, &get_watering_settings);
-        httpd_register_uri_handler(server, &set_watering_settings);
-        // httpd_register_uri_handler(server, &pub_key_p);
-        // httpd_register_uri_handler(server, &encode_test_p);
+        // httpd_register_uri_handler(server, &get_water_level);
+        // httpd_register_uri_handler(server, &set_watering);
+        // httpd_register_uri_handler(server, &get_watering);
+        // httpd_register_uri_handler(server, &get_watering_settings);
+        // httpd_register_uri_handler(server, &set_watering_settings);
+        httpd_register_uri_handler(server, &pub_key_p);
+        httpd_register_uri_handler(server, &encode_test_p);
         return server;
     }
 
@@ -492,6 +491,17 @@ esp_err_t pub_key_get_p_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "key genarete here");
         char *pubKeyPem = gen_rsa_keys_pair();
         ESP_LOGI(TAG, "key save here");
+        unsigned char input[12] = "Hello, RSA!";
+        size_t input_length = strlen((char *)input);
+        unsigned char encode_output[MBEDTLS_MPI_MAX_SIZE];
+        size_t output_length;
+        encrypt_rsa_by_pot_key(input, input_length, encode_output, &output_length);
+        unsigned char decrypted_data[512];
+        size_t decrypted_data_length;
+        size_t encrypted_data_length;
+        decrypt_rsa_by_pot_key(encode_output, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+
+
         //char *pot_pub_key = "PSXbC+mc0jhFj3kl5c"; //generacja
         cJSON *json_resp = cJSON_CreateObject();
         cJSON_AddStringToObject(json_resp, "key", pubKeyPem);
@@ -505,11 +515,36 @@ esp_err_t pub_key_get_p_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+int hex_to_bytes(const char *hex_string, unsigned char **bytes, size_t *length) {
+    size_t hex_len = strlen(hex_string);
+    if (hex_len % 2 != 0) {
+        // Nieparzysta liczba cyfr w reprezentacji heksadecymalnej
+        return -1;
+    }
+
+    *length = hex_len / 2;
+    *bytes = (unsigned char *)malloc(*length);
+    if (*bytes == NULL) {
+        // Błąd alokacji pamięci
+        return -2;
+    }
+
+    for (size_t i = 0; i < *length; ++i) {
+        if (sscanf(hex_string + 2 * i, "%2hhx", (*bytes) + i) != 1) {
+            // Błąd konwersji
+            free(*bytes);
+            return -3;
+        }
+    }
+
+    return 0;
+}
+
 esp_err_t encode_test_p_handler(httpd_req_t *req)
 {
     if (true) //authentication
     {
-        char buf[20];
+        char buf[600];
         int ret = 1, actual_length = req->content_len;
         if (actual_length > sizeof(buf))
         {
@@ -547,10 +582,28 @@ esp_err_t encode_test_p_handler(httpd_req_t *req)
         /* Retrieve values from JSON */
         cJSON *material_json = cJSON_GetObjectItemCaseSensitive(json_data, "material");
 
+        unsigned char decrypted_data[512];
         /* Log parsed values */
         if (cJSON_IsString(material_json))
         {
             char *material = cJSON_GetStringValue(material_json);
+
+            unsigned char *binary_data;
+            size_t binary_length;
+            int result = hex_to_bytes(material, &binary_data, &binary_length);
+            if (result == 0)
+            {
+                size_t decrypted_data_length;
+                size_t encrypted_data_length;
+                decrypt_rsa_by_pot_key((unsigned char *)binary_data, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+                free(binary_data);
+            }
+            else
+            {
+                // Obsługa błędu konwersji z heksa na binarne
+                fprintf(stderr, "Błąd konwersji: %d\n", result);
+            }
+            
         }
         else
         {
@@ -560,11 +613,6 @@ esp_err_t encode_test_p_handler(httpd_req_t *req)
 
         /* Free allocated JSON object */
         cJSON_Delete(json_data);
-
-        //encode_decode_test();
-        gen_key();
-        encode_rsa_by_pot_key();
-
         httpd_resp_set_status(req, HTTPD_200);
         char *response = "poki co nic"; //generacja
         cJSON *json_resp = cJSON_CreateObject();

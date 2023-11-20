@@ -3,19 +3,18 @@
 
 #include "mbedtls/rsa.h"
 
-#define KEY_SIZE 512
+#define KEY_SIZE 2048
 #define EXPONENT 65537
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// void print_public_key(mbedtls_rsa_context *rsa);
-// void print_private_key(mbedtls_rsa_context *rsa);
+char *get_public_key_pem(mbedtls_rsa_context *rsa);
 void *gen_rsa_keys_pair();
-void encode_decode_test();
 void gen_key();
-void encode_rsa_by_pot_key();
+void encrypt_rsa_by_pot_key(unsigned char *input, size_t input_length, unsigned char *output, size_t *output_length);
+void decrypt_rsa_by_pot_key(unsigned char *input, size_t input_length, unsigned char *output, size_t *output_length);
 
 
 #ifdef __cplusplus
