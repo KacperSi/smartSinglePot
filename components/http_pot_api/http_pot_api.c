@@ -37,6 +37,15 @@ bool authentication(httpd_req_t *req){
     return true;
 }
 
+bool uuid_auth(httpd_req_t *req)
+{
+    if (UUID_AUTH_MODE)
+    {
+        return auth2uuid_authentication(req);
+    }
+    return true;
+}
+
 esp_err_t moisture_get_handler_station(httpd_req_t *req)
 {
     if (authentication(req))
@@ -335,15 +344,16 @@ httpd_handle_t start_station_webserver(void){
         // Set URI handlers
         ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_basic_auth(server);
-        httpd_register_uri_handler(server, &change_pass);
+        // httpd_register_uri_handler(server, &change_pass);
         httpd_register_uri_handler(server, &get_soil_moisture);
         // httpd_register_uri_handler(server, &get_water_level);
-        // httpd_register_uri_handler(server, &set_watering);
+        httpd_register_uri_handler(server, &set_watering);
         // httpd_register_uri_handler(server, &get_watering);
         // httpd_register_uri_handler(server, &get_watering_settings);
         // httpd_register_uri_handler(server, &set_watering_settings);
         httpd_register_uri_handler(server, &pub_key_p);
         httpd_register_uri_handler(server, &encode_test_p);
+        httpd_register_uri_handler(server, &decode_test_p);
         return server;
     }
 
@@ -430,7 +440,7 @@ esp_err_t change_pass_handler(httpd_req_t *req)
 // to zapytanie zabezpieczone tylko przy pomocy auth2uuid
 esp_err_t pub_key_get_p_handler(httpd_req_t *req)
 {
-    if (true)//do testów
+    if (uuid_auth(req))
     {
         char buf[600];
         int ret = 1, actual_length = req->content_len;
@@ -475,8 +485,10 @@ esp_err_t pub_key_get_p_handler(httpd_req_t *req)
         {
             char *key = cJSON_GetStringValue(key_json);
             ESP_LOGI(TAG, "client public key: %s", key);
-            write_flash_str("enc_data", "s_pub_key", key);
+            save_pem_to_file(key);
             ESP_LOGI(TAG, "client key saved");
+            const char *file_path = "/files/client_pub.txt";
+            read_file(file_path);
         }
         else
         {
@@ -491,15 +503,15 @@ esp_err_t pub_key_get_p_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "key genarete here");
         char *pubKeyPem = gen_rsa_keys_pair();
         ESP_LOGI(TAG, "key save here");
-        unsigned char input[12] = "Hello, RSA!";
-        size_t input_length = strlen((char *)input);
-        unsigned char encode_output[MBEDTLS_MPI_MAX_SIZE];
-        size_t output_length;
-        encrypt_rsa_by_pot_key(input, input_length, encode_output, &output_length);
-        unsigned char decrypted_data[512];
-        size_t decrypted_data_length;
-        size_t encrypted_data_length;
-        decrypt_rsa_by_pot_key(encode_output, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+        // unsigned char input[12] = "Hello, RSA!";
+        // size_t input_length = strlen((char *)input);
+        // unsigned char encode_output[MBEDTLS_MPI_MAX_SIZE];
+        // size_t output_length;
+        // encrypt_rsa_by_pot_key(input, input_length, encode_output, &output_length);
+        // unsigned char decrypted_data[512];
+        // size_t decrypted_data_length;
+        // size_t encrypted_data_length;
+        // decrypt_rsa_by_pot_key(encode_output, &encrypted_data_length, decrypted_data, &decrypted_data_length);
 
 
         //char *pot_pub_key = "PSXbC+mc0jhFj3kl5c"; //generacja
@@ -515,34 +527,98 @@ esp_err_t pub_key_get_p_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-int hex_to_bytes(const char *hex_string, unsigned char **bytes, size_t *length) {
-    size_t hex_len = strlen(hex_string);
-    if (hex_len % 2 != 0) {
-        // Nieparzysta liczba cyfr w reprezentacji heksadecymalnej
-        return -1;
-    }
 
-    *length = hex_len / 2;
-    *bytes = (unsigned char *)malloc(*length);
-    if (*bytes == NULL) {
-        // Błąd alokacji pamięci
-        return -2;
-    }
+// esp_err_t encode_test_p_handler(httpd_req_t *req)
+// {
+//     if (true) //authentication
+//     {
+//         char buf[600];
+//         int ret = 1, actual_length = req->content_len;
+//         if (actual_length > sizeof(buf))
+//         {
+//             http_error_handler(req, HTTPD_400_BAD_REQUEST);
+//         }
+//         int recv_data_length = MIN(actual_length, sizeof(buf));
 
-    for (size_t i = 0; i < *length; ++i) {
-        if (sscanf(hex_string + 2 * i, "%2hhx", (*bytes) + i) != 1) {
-            // Błąd konwersji
-            free(*bytes);
-            return -3;
-        }
-    }
+//         /* Read the data for the request */
+//         if ((ret = httpd_req_recv(req, buf, recv_data_length)) <= 0)
+//         { /* 0 return value indicates connection closed */
+//             if (ret == HTTPD_SOCK_ERR_TIMEOUT)
+//             {
+//                 /* Retry receiving if timeout occurred */
+//                 httpd_resp_send_408(req);
+//             }
+//             /* In case of error, returning ESP_FAIL will
+//              * ensure that the underlying socket is closed */
+//             return ESP_FAIL;
+//         }
 
-    return 0;
-}
+//         /* Log data received */
+//         ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
+//         ESP_LOGI(TAG, "%.*s", ret, buf);
+//         ESP_LOGI(TAG, "====================================");
+
+//         cJSON *json_data = NULL;
+//         /* Parse JSON data */
+//         json_data = cJSON_Parse(buf);
+//         if (json_data == NULL)
+//         {
+//             ESP_LOGE(TAG, "Failed to parse JSON data");
+//             http_error_handler(req, HTTPD_400_BAD_REQUEST);
+//         }
+
+//         /* Retrieve values from JSON */
+//         cJSON *material_json = cJSON_GetObjectItemCaseSensitive(json_data, "material");
+
+//         unsigned char decrypted_data[512];
+//         /* Log parsed values */
+//         if (cJSON_IsString(material_json))
+//         {
+//             char *material = cJSON_GetStringValue(material_json);
+
+//             unsigned char *binary_data;
+//             size_t binary_length;
+//             int result = hex_to_bytes(material, &binary_data, &binary_length);
+//             if (result == 0)
+//             {
+//                 size_t decrypted_data_length;
+//                 size_t encrypted_data_length;
+//                 decrypt_rsa_by_pot_key((unsigned char *)binary_data, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+//                 free(binary_data);
+//             }
+//             else
+//             {
+//                 // Obsługa błędu konwersji z heksa na binarne
+//                 fprintf(stderr, "Błąd konwersji: %d\n", result);
+//             }
+            
+//         }
+//         else
+//         {
+//             ESP_LOGE(TAG, "Failed to retrieve values from JSON");
+//             http_error_handler(req, HTTPD_400_BAD_REQUEST);
+//         }
+
+//         /* Free allocated JSON object */
+//         cJSON_Delete(json_data);
+//         httpd_resp_set_status(req, HTTPD_200);
+//         char *response = "poki co nic"; //generacja
+//         cJSON *json_resp = cJSON_CreateObject();
+//         cJSON_AddStringToObject(json_resp, "response", response);
+//         char *resp_str = cJSON_PrintUnformatted(json_resp);
+//         cJSON_Delete(json_resp);
+//         // char suuid_str[9];
+//         // get_suuid_str(suuid_str);
+//         // httpd_resp_set_hdr(req, "UUID", suuid_str);
+//         httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+//     }
+//     return ESP_OK;
+// }
+
 
 esp_err_t encode_test_p_handler(httpd_req_t *req)
 {
-    if (true) //authentication
+    if (authentication(req)) //authentication
     {
         char buf[600];
         int ret = 1, actual_length = req->content_len;
@@ -570,49 +646,31 @@ esp_err_t encode_test_p_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "%.*s", ret, buf);
         ESP_LOGI(TAG, "====================================");
 
-        cJSON *json_data = NULL;
-        /* Parse JSON data */
-        json_data = cJSON_Parse(buf);
-        if (json_data == NULL)
-        {
-            ESP_LOGE(TAG, "Failed to parse JSON data");
-            http_error_handler(req, HTTPD_400_BAD_REQUEST);
-        }
-
-        /* Retrieve values from JSON */
-        cJSON *material_json = cJSON_GetObjectItemCaseSensitive(json_data, "material");
-
         unsigned char decrypted_data[512];
-        /* Log parsed values */
-        if (cJSON_IsString(material_json))
-        {
-            char *material = cJSON_GetStringValue(material_json);
+        unsigned char *binary_data;
+        size_t binary_length;
 
-            unsigned char *binary_data;
-            size_t binary_length;
-            int result = hex_to_bytes(material, &binary_data, &binary_length);
-            if (result == 0)
-            {
-                size_t decrypted_data_length;
-                size_t encrypted_data_length;
-                decrypt_rsa_by_pot_key((unsigned char *)binary_data, &encrypted_data_length, decrypted_data, &decrypted_data_length);
-                free(binary_data);
-            }
-            else
-            {
-                // Obsługa błędu konwersji z heksa na binarne
-                fprintf(stderr, "Błąd konwersji: %d\n", result);
-            }
-            
-        }
-        else
-        {
-            ESP_LOGE(TAG, "Failed to retrieve values from JSON");
-            http_error_handler(req, HTTPD_400_BAD_REQUEST);
-        }
+
+        size_t decrypted_data_length;
+        size_t encrypted_data_length;
+        decrypt_rsa_by_pot_key((unsigned char *)buf, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+
+
+        // int result = hex_to_bytes(buf, &binary_data, &binary_length);
+        // if (result == 0)
+        // {
+            // size_t decrypted_data_length;
+            // size_t encrypted_data_length;
+            // decrypt_rsa_by_pot_key((unsigned char *)binary_data, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+            // free(binary_data);
+        // }
+        // else
+        // {
+        //     // Obsługa błędu konwersji z heksa na binarne
+        //     fprintf(stderr, "Błąd konwersji: %d\n", result);
+        // }
 
         /* Free allocated JSON object */
-        cJSON_Delete(json_data);
         httpd_resp_set_status(req, HTTPD_200);
         char *response = "poki co nic"; //generacja
         cJSON *json_resp = cJSON_CreateObject();
@@ -623,6 +681,56 @@ esp_err_t encode_test_p_handler(httpd_req_t *req)
         // get_suuid_str(suuid_str);
         // httpd_resp_set_hdr(req, "UUID", suuid_str);
         httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+    }
+    return ESP_OK;
+}
+
+esp_err_t decode_test_p_handler(httpd_req_t *req)
+{
+    if (true) //authentication
+    {
+        char buf[60];
+        int ret = 1, actual_length = req->content_len;
+        if (actual_length > sizeof(buf))
+        {
+            http_error_handler(req, HTTPD_400_BAD_REQUEST);
+        }
+        int recv_data_length = MIN(actual_length, sizeof(buf));
+
+        /* Read the data for the request */
+        if ((ret = httpd_req_recv(req, buf, recv_data_length)) <= 0)
+        { /* 0 return value indicates connection closed */
+            if (ret == HTTPD_SOCK_ERR_TIMEOUT)
+            {
+                /* Retry receiving if timeout occurred */
+                httpd_resp_send_408(req);
+            }
+            /* In case of error, returning ESP_FAIL will
+             * ensure that the underlying socket is closed */
+            return ESP_FAIL;
+        }
+
+        /* Log data received */
+        ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
+        ESP_LOGI(TAG, "%.*s", ret, buf);
+        ESP_LOGI(TAG, "====================================");
+
+
+        cJSON *json_resp = cJSON_CreateObject();
+        cJSON_AddStringToObject(json_resp, "odp", "zaszyfrowanko");
+        char *resp_str = cJSON_PrintUnformatted(json_resp);
+
+
+        char hex_string[513];
+        encrypt_by_s_key(hex_string, resp_str);
+        printf("Zaszyfrowany tekst: %s\n", hex_string);
+        cJSON_Delete(json_resp);
+
+        httpd_resp_set_status(req, HTTPD_200);
+        char suuid_str[9];
+        get_suuid_str(suuid_str);
+        httpd_resp_set_hdr(req, "UUID", suuid_str);
+        httpd_resp_send(req, hex_string, HTTPD_RESP_USE_STRLEN);
     }
     return ESP_OK;
 }

@@ -4,8 +4,10 @@ from cryptography.hazmat.primitives.asymmetric import rsa, padding
 import requests
 import json
 import time
+import base64
+from requests.auth import HTTPBasicAuth
 
-def encrypt_rsa(message, public_key_pem):
+def encrypt_rsa(message, header, public_key_pem):
     # Wczytaj klucz publiczny z formatu PEM
     public_key = serialization.load_pem_public_key(
         public_key_pem,
@@ -54,19 +56,36 @@ if __name__ == "__main__":
     #public_key_pem = b"-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvJdkRkdrzES5oz4/2T8o\nLetb9EEcfWt5gywCFvOGpLa3HjBX2NTbgBj7bRiY4CKVOlMJUk9xyw6knc4rCiyb\nLslKtxdOUJ+5tdTxsDm04HHdQ/bhPfRQ8xEVmSOLaP7kXQfmeFbwuSP/TWGnm7hy\nzXgAjDFivX4taY2pKK5EG4OwJk3xiOaCd1788VTnAQK7eEdkonjmd82hULqC2cMy\nC3bbb0/dSxEvan3JmGAsxjQsNWsnbDtDtg9vBirosMINLF/d/cLLd94ozB/cO0g7\nZC4tnwW/vg0nsk7loSpKDVOqwwWF4WHigIo3GuNCqXEqW1MTZBxtKd2XFjjzarrX\n1wIDAQAB\n-----END PUBLIC KEY-----\n"
 
     # Zaszyfruj wiadomość przy użyciu klucza publicznego
-    
+
+    payload = {"material": message_to_encrypt}
+    json_payload = json.dumps(payload)
+
+    username = "singlepotuser"
+    password = "Vfd23m*nr=vPgGJ"
+    credentials = f"{username}:{password}"
+
+    base64_encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+
+    head = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Basic {base64_encoded_credentials}',
+        'UUID': "b662e4e9"
+    }
+
     if public_key_pem:
-        encrypted_message = encrypt_rsa(message_to_encrypt, public_key_pem)
+        encrypted_message = encrypt_rsa(json_payload, head, public_key_pem)
 
     # Wyświetl zaszyfrowaną wiadomość
         print("Zaszyfrowana wiadomość:", encrypted_message.hex())
 
     # Wyślij żądanie HTTP
         url = "http://singlepot1/encode_test"
-        payload = {"material": encrypted_message.hex()}
-        time.sleep(2)
+        # payload = {"material": encrypted_message.hex()}
+
+        time.sleep(5)
         try:
-            response = requests.post(url, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
+            response = requests.post(url, data=encrypted_message, headers=head)
+            print("Kod odpowiedzi serwera:", response.status_code)
             print("Odpowiedź serwera:", response.text)
         except requests.exceptions.RequestException as e:
             print("Błąd podczas wysyłania żądania:", e)

@@ -7,6 +7,8 @@
 
 #define BASIC_AUTH_MODE      false
 #define UUID_AUTH_MODE      false
+#define RSA_ENCRYPTION      false
+#define WiFi_mode      false
 
 #ifdef __cplusplus
 extern "C" {
@@ -127,7 +129,17 @@ static const httpd_uri_t encode_test_p = {
     .user_ctx  = NULL
 };
 
+esp_err_t decode_test_p_handler(httpd_req_t *req);
+
+static const httpd_uri_t decode_test_p = {
+    .uri       = "/decode_test",
+    .method    = HTTP_POST,
+    .handler   = decode_test_p_handler,
+    .user_ctx  = NULL
+};
+
 bool authentication(httpd_req_t *req);
+bool uuid_auth(httpd_req_t *req);
 bool watering_time_validation(char *watering_time);
 
 #ifdef __cplusplus

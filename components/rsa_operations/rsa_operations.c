@@ -12,6 +12,173 @@
 extern void save_pot_rsa_key_to_flash(mbedtls_rsa_context *rsa);
 extern void read_pot_rsa_key_from_flash(mbedtls_rsa_context *rsa);
 
+int hex_to_bytes(const char *hex_string, unsigned char **bytes, size_t *length) {
+    size_t hex_len = strlen(hex_string);
+    if (hex_len % 2 != 0) {
+        // Nieparzysta liczba cyfr w reprezentacji heksadecymalnej
+        return -1;
+    }
+
+    *length = hex_len / 2;
+    *bytes = (unsigned char *)malloc(*length);
+    if (*bytes == NULL) {
+        // Błąd alokacji pamięci
+        return -2;
+    }
+
+    for (size_t i = 0; i < *length; ++i) {
+        int result = sscanf(hex_string + 2 * i, "%2hhx", (*bytes) + i);
+        if (result != 1) {
+            // Błąd konwersji
+            fprintf(stderr, "Błąd konwersji dla indeksu %zu: %s\n", i, hex_string + 2 * i);
+            free(*bytes);
+            return -3;
+        } else {
+            fprintf(stderr, "Indeks %zu ok: %02x\n", i, (*bytes)[i]);
+        }
+    }
+
+    return 0;
+}
+
+void string_to_hex(const char* input, size_t input_size, char* output) {
+    //size_t input_length = input_size;
+
+    // printf("Zakodowany tekst (for w string_to_hex): ");
+    // for (size_t i = 0; i < input_size; ++i) {
+    //     printf("%02x", output[i]);
+    // }
+    // printf("\n");
+
+    if (2 * input_size > 512) {
+        fprintf(stderr, "Zbyt długi ciąg do konwersji\n");
+        return;
+    }
+
+    for (size_t i = 0; i < input_size; ++i) {
+        sprintf(output + (i * 2), "%02x", (unsigned char)input[i]);
+    }
+}
+
+void read_file(const char *file_path) {
+    FILE *file = fopen(file_path, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Błąd otwierania pliku %s do odczytu\n", file_path);
+        return;
+    }
+
+    char buffer[800];  // Maksymalnie 600 znaków plus jeden na znak końca ciągu
+    size_t bytes_read = fread(buffer, 1, sizeof(buffer) - 1, file);
+
+    if (bytes_read > 0) {
+        buffer[bytes_read] = '\0';  // Dodaj znak końca ciągu
+        printf("Zawartość pliku %s:\n%s", file_path, buffer);
+    } else if (feof(file)) {
+        fprintf(stderr, "Plik %s jest pusty\n", file_path);
+    } else if (ferror(file)) {
+        fprintf(stderr, "Błąd odczytu pliku %s\n", file_path);
+    }
+
+    fclose(file);
+}
+
+
+void save_pem_to_file(const char *pem_string) {
+    const char *file_path = "/files/client_pub.txt";
+    FILE *file = fopen(file_path, "wb");
+    if (file == NULL) {
+        fprintf("Błąd otwierania pliku %s do zapisu", file_path);
+        return;
+    }
+
+    size_t pem_length = strlen(pem_string);
+    size_t bytes_written = fwrite(pem_string, 1, pem_length, file);
+    fclose(file);
+    printf("Po zapisie");
+}
+
+void encrypt_by_s_key(char *hex_string, char *to_encrypt) {
+    int ret = 1;
+    const char *public_key_path = "/files/client_pub.txt";
+    // unsigned char to_encrypt[14] = "zaszyfrowanko";
+
+    // Inicjalizacja struktury klucza publicznego
+    mbedtls_pk_context pk;
+    mbedtls_pk_init(&pk);
+
+    // Odczyt klucza publicznego z pliku PEM
+    FILE *key_file = fopen(public_key_path, "rb");
+    if (key_file == NULL) {
+        fprintf(stderr, "Błąd otwierania pliku %s\n", public_key_path);
+        return;
+    }
+    else{
+        printf("Plik %s otwarty\n", public_key_path);
+    }
+
+    if (mbedtls_pk_parse_public_keyfile(&pk, public_key_path) != 0) {
+        fprintf(stderr, "Błąd parsowania klucza publicznego\n");
+        fclose(key_file);
+        mbedtls_pk_free(&pk);
+        return;
+    }
+    else{
+        printf("Sparsowano\n");
+    }
+
+    fclose(key_file);
+
+    // Szyfrowanie
+    size_t output_size = 0;
+    unsigned char output[MBEDTLS_MPI_MAX_SIZE];
+
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+    const char *pers = "rsa_genkey";
+
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+    // Ustaw padding OAEP
+    mbedtls_printf("\n  . Setting RSA padding to OAEP");
+    ret = mbedtls_rsa_set_padding(mbedtls_pk_rsa(pk), MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_SHA256);
+    if (ret != 0)
+    {
+        mbedtls_printf(" failed\n  ! mbedtls_rsa_set_padding returned %d\n\n", ret);
+    }
+
+    mbedtls_printf("\n  . Seeding the random number generator...");
+    fflush(stdout);
+
+    mbedtls_entropy_init(&entropy);
+    if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                     (const unsigned char *)pers,
+                                     strlen(pers))) != 0)
+    {
+        mbedtls_printf(" failed\n  ! mbedtls_ctr_drbg_seed returned %d\n", ret);
+    }
+    else{
+        mbedtls_printf("Number generator ok\n");
+    }
+
+    if (mbedtls_pk_encrypt(&pk, (const unsigned char *)to_encrypt, strlen(to_encrypt),
+                            output, &output_size, sizeof(output), mbedtls_ctr_drbg_random, &ctr_drbg) != 0) {
+        fprintf(stderr, "Błąd szyfrowania\n");
+        mbedtls_pk_free(&pk);
+        return;
+    }
+    else{
+        printf("Zaszyfrowano\n");
+    }
+
+    // printf("Zakodowany tekst (for): ");
+    // for (size_t i = 0; i < output_size; ++i) {
+    //     printf("%02x", output[i]);
+    // }
+    // printf("\n");
+
+    string_to_hex((const char*)output, output_size, hex_string);
+
+    mbedtls_pk_free(&pk);
+}
 
 
 char *get_public_key_pem(mbedtls_rsa_context *rsa) {
