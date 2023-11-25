@@ -46,6 +46,7 @@ static void ap_mode_handle(void* arg);
 static void bt_pairing_handle(void* arg);
 void watering_timer_callback(TimerHandle_t xTimer);
 void watering_config();
+void gpio_loop();
 
 #ifdef __cplusplus
 }

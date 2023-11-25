@@ -8,7 +8,8 @@
 #define BASIC_AUTH_MODE      false
 #define UUID_AUTH_MODE      false
 #define RSA_ENCRYPTION      false
-#define WiFi_mode      false
+#define WiFi_mode      true
+#define DEVICE_HOSTNAME      CONFIG_DEVICE_HOSTNAME
 
 #ifdef __cplusplus
 extern "C" {
@@ -135,6 +136,26 @@ static const httpd_uri_t decode_test_p = {
     .uri       = "/decode_test",
     .method    = HTTP_POST,
     .handler   = decode_test_p_handler,
+    .user_ctx  = NULL
+};
+
+esp_err_t get_hostname_handler(httpd_req_t *req);
+
+static const httpd_uri_t get_hostname = {
+    .uri       = "/get_hostname",
+    .method    = HTTP_GET,
+    .handler   = get_hostname_handler,
+    /* Let's pass response string in user
+     * context to demonstrate it's usage */
+    .user_ctx  = NULL
+};
+
+esp_err_t set_wifi_handler(httpd_req_t *req);
+
+static const httpd_uri_t set_wifi = {
+    .uri       = "/set_wifi",
+    .method    = HTTP_POST,
+    .handler   = set_wifi_handler,
     .user_ctx  = NULL
 };
 

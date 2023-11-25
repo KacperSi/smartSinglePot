@@ -51,4 +51,5 @@ void app_main(void)
                                                    &connect_handler,
                                                    &server));
     }
+    gpio_loop();
 }

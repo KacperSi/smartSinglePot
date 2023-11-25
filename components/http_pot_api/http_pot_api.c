@@ -54,10 +54,19 @@ esp_err_t moisture_get_handler_station(httpd_req_t *req)
         cJSON *json_resp = cJSON_CreateObject();
         cJSON_AddNumberToObject(json_resp, "soil_moisture", soil_moisture);
         char *resp_str = cJSON_PrintUnformatted(json_resp);
+        char hex_string[513];
+        if(RSA_ENCRYPTION){
+            encrypt_by_s_key(hex_string, resp_str);
+        }
         char suuid_str[9];
         get_suuid_str(suuid_str);
         httpd_resp_set_hdr(req, "UUID", suuid_str);
-        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        if(RSA_ENCRYPTION){
+            httpd_resp_send(req, hex_string, HTTPD_RESP_USE_STRLEN);
+        }
+        else{
+            httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        }
     }
     return ESP_OK;
 }
@@ -70,10 +79,19 @@ esp_err_t water_level_handler_station(httpd_req_t *req)
         cJSON *json_resp = cJSON_CreateObject();
         cJSON_AddNumberToObject(json_resp, "water_level", water_level);
         char *resp_str = cJSON_PrintUnformatted(json_resp);
+        char hex_string[513];
+        if(RSA_ENCRYPTION){
+            encrypt_by_s_key(hex_string, resp_str);
+        }
         char suuid_str[9];
         get_suuid_str(suuid_str);
         httpd_resp_set_hdr(req, "UUID", suuid_str);
-        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        if(RSA_ENCRYPTION){
+            httpd_resp_send(req, hex_string, HTTPD_RESP_USE_STRLEN);
+        }
+        else{
+            httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        }
     }
     return ESP_OK;
 }
@@ -86,10 +104,19 @@ esp_err_t get_watering_handler_station(httpd_req_t *req)
         cJSON *json_resp = cJSON_CreateObject();
         cJSON_AddStringToObject(json_resp, "watering", watering);
         char *resp_str = cJSON_PrintUnformatted(json_resp);
+        char hex_string[513];
+        if(RSA_ENCRYPTION){
+            encrypt_by_s_key(hex_string, resp_str);
+        }
         char suuid_str[9];
         get_suuid_str(suuid_str);
         httpd_resp_set_hdr(req, "UUID", suuid_str);
-        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        if(RSA_ENCRYPTION){
+            httpd_resp_send(req, hex_string, HTTPD_RESP_USE_STRLEN);
+        }
+        else{
+            httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        }
     }
     return ESP_OK;
 }
@@ -98,7 +125,7 @@ esp_err_t set_watering_handler_station(httpd_req_t *req)
 {
     if (authentication(req))
     {
-        char buf[100];
+        char buf[520];
         int ret, actual_length = req->content_len;
         if (actual_length > sizeof(buf))
         {
@@ -125,8 +152,16 @@ esp_err_t set_watering_handler_station(httpd_req_t *req)
         ESP_LOGI(TAG, "====================================");
 
         cJSON *json_data = NULL;
-        /* Parse JSON data */
-        json_data = cJSON_Parse(buf);
+        if(RSA_ENCRYPTION){
+            unsigned char decrypted_data[100];
+            size_t decrypted_data_length;
+            size_t encrypted_data_length;
+            decrypt_rsa_by_pot_key((unsigned char *)buf, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+            json_data = cJSON_Parse((char *)decrypted_data);
+        }
+        else{
+            json_data = cJSON_Parse(buf);
+        }
         if (json_data == NULL)
         {
             ESP_LOGE(TAG, "Failed to parse JSON data");
@@ -187,10 +222,19 @@ esp_err_t get_watering_settings_handler_station(httpd_req_t *req)
         cJSON_AddStringToObject(json_resp, "watering_time", watering_time);
         cJSON_AddNumberToObject(json_resp, "watering_max_time", watering_max_time);
         char *resp_str = cJSON_PrintUnformatted(json_resp);
+        char hex_string[513];
+        if(RSA_ENCRYPTION){
+            encrypt_by_s_key(hex_string, resp_str);
+        }
         char suuid_str[9];
         get_suuid_str(suuid_str);
         httpd_resp_set_hdr(req, "UUID", suuid_str);
-        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        if(RSA_ENCRYPTION){
+            httpd_resp_send(req, hex_string, HTTPD_RESP_USE_STRLEN);
+        }
+        else{
+            httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        }
     }
     return ESP_OK;
 }
@@ -234,7 +278,7 @@ esp_err_t set_watering_settings_handler_station(httpd_req_t *req)
 {
     if (authentication(req))
     {
-        char buf[100];
+        char buf[520];
         int ret, actual_length = req->content_len;
         if (actual_length > sizeof(buf))
         {
@@ -261,8 +305,16 @@ esp_err_t set_watering_settings_handler_station(httpd_req_t *req)
         ESP_LOGI(TAG, "====================================");
 
         cJSON *json_data = NULL;
-        /* Parse JSON data */
-        json_data = cJSON_Parse(buf);
+        if(RSA_ENCRYPTION){
+            unsigned char decrypted_data[100];
+            size_t decrypted_data_length;
+            size_t encrypted_data_length;
+            decrypt_rsa_by_pot_key((unsigned char *)buf, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+            json_data = cJSON_Parse((char *)decrypted_data);
+        }
+        else{
+            json_data = cJSON_Parse(buf);
+        }
         if (json_data == NULL)
         {
             ESP_LOGE(TAG, "Failed to parse JSON data");
@@ -328,10 +380,6 @@ esp_err_t set_watering_settings_handler_station(httpd_req_t *req)
 }
 
 
-///////////////////////////////////////////////////////////////////
-
-
-
 httpd_handle_t start_station_webserver(void){
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -344,16 +392,24 @@ httpd_handle_t start_station_webserver(void){
         // Set URI handlers
         ESP_LOGI(TAG, "Registering URI handlers");
         httpd_register_basic_auth(server);
-        // httpd_register_uri_handler(server, &change_pass);
-        httpd_register_uri_handler(server, &get_soil_moisture);
-        // httpd_register_uri_handler(server, &get_water_level);
-        httpd_register_uri_handler(server, &set_watering);
-        // httpd_register_uri_handler(server, &get_watering);
-        // httpd_register_uri_handler(server, &get_watering_settings);
-        // httpd_register_uri_handler(server, &set_watering_settings);
-        httpd_register_uri_handler(server, &pub_key_p);
-        httpd_register_uri_handler(server, &encode_test_p);
-        httpd_register_uri_handler(server, &decode_test_p);
+        if(WiFi_mode){
+            httpd_register_uri_handler(server, &change_pass);
+            httpd_register_uri_handler(server, &get_soil_moisture);
+            httpd_register_uri_handler(server, &get_water_level);
+            httpd_register_uri_handler(server, &set_watering);
+            httpd_register_uri_handler(server, &get_watering);
+            httpd_register_uri_handler(server, &get_watering_settings);
+            httpd_register_uri_handler(server, &set_watering_settings);
+            httpd_register_uri_handler(server, &pub_key_p);
+        }
+        else{
+            httpd_register_uri_handler(server, &pub_key_p);
+            httpd_register_uri_handler(server, &set_wifi);
+            httpd_register_uri_handler(server, &get_hostname);
+        }
+        
+        // httpd_register_uri_handler(server, &encode_test_p);
+        // httpd_register_uri_handler(server, &decode_test_p);
         return server;
     }
 
@@ -361,14 +417,10 @@ httpd_handle_t start_station_webserver(void){
     return NULL;
 }
 
-///////////////////////////////////////////////////////////////////
-
-// niesprawdzone endpointy
-
 esp_err_t change_pass_handler(httpd_req_t *req)
 {
-    if(basic_authentication(req)){
-        char buf[100];
+    if(authentication(req)){
+        char buf[520];
         int ret, actual_length = req->content_len;
         if (actual_length > sizeof(buf))
         {
@@ -395,8 +447,16 @@ esp_err_t change_pass_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "====================================");
 
         cJSON *json_data = NULL;
-        /* Parse JSON data */
-        json_data = cJSON_Parse(buf);
+        if(RSA_ENCRYPTION){
+            unsigned char decrypted_data[100];
+            size_t decrypted_data_length;
+            size_t encrypted_data_length;
+            decrypt_rsa_by_pot_key((unsigned char *)buf, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+            json_data = cJSON_Parse((char *)decrypted_data);
+        }
+        else{
+            json_data = cJSON_Parse(buf);
+        }
         if (json_data == NULL)
         {
             ESP_LOGE(TAG, "Failed to parse JSON data");
@@ -414,8 +474,8 @@ esp_err_t change_pass_handler(httpd_req_t *req)
         {
             strcpy(USERNAME, cred1->valuestring);
             strcpy(PASS, cred2->valuestring);
-            ESP_LOGI(TAG, "cred1: %s", cred1->valuestring);
-            ESP_LOGI(TAG, "cred2: %s", cred2->valuestring);
+            // ESP_LOGI(TAG, "cred1: %s", cred1->valuestring);
+            // ESP_LOGI(TAG, "cred2: %s", cred2->valuestring);
 
         }
         else
@@ -426,7 +486,10 @@ esp_err_t change_pass_handler(httpd_req_t *req)
 
         /* Free allocated JSON object */
         cJSON_Delete(json_data);
-
+    
+        char suuid_str[9];
+        get_suuid_str(suuid_str);
+        httpd_resp_set_hdr(req, "UUID", suuid_str);
         httpd_resp_set_status(req, HTTPD_200);
         httpd_resp_send_chunk(req, NULL, 0);
 
@@ -487,8 +550,8 @@ esp_err_t pub_key_get_p_handler(httpd_req_t *req)
             ESP_LOGI(TAG, "client public key: %s", key);
             save_pem_to_file(key);
             ESP_LOGI(TAG, "client key saved");
-            const char *file_path = "/files/client_pub.txt";
-            read_file(file_path);
+            // const char *file_path = "/files/client_pub.txt";
+            // read_file(file_path);
         }
         else
         {
@@ -527,6 +590,121 @@ esp_err_t pub_key_get_p_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+esp_err_t get_hostname_handler(httpd_req_t *req)
+{
+    if (authentication(req))
+    {
+        char *hostname = DEVICE_HOSTNAME;
+        cJSON *json_resp = cJSON_CreateObject();
+        cJSON_AddStringToObject(json_resp, "hostname", hostname);
+        char *resp_str = cJSON_PrintUnformatted(json_resp);
+        char hex_string[513];
+        if(RSA_ENCRYPTION){
+            encrypt_by_s_key(hex_string, resp_str);
+        }
+        char suuid_str[9];
+        get_suuid_str(suuid_str);
+        httpd_resp_set_hdr(req, "UUID", suuid_str);
+        if(RSA_ENCRYPTION){
+            httpd_resp_send(req, hex_string, HTTPD_RESP_USE_STRLEN);
+        }
+        else{
+            httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        }
+    }
+    return ESP_OK;
+}
+
+esp_err_t set_wifi_handler(httpd_req_t *req)
+{
+    if(authentication(req)){
+        char buf[520];
+        int ret, actual_length = req->content_len;
+        if (actual_length > sizeof(buf))
+        {
+            http_error_handler(req, HTTPD_400_BAD_REQUEST);
+        }
+        int recv_data_length = MIN(actual_length, sizeof(buf));
+        
+        /* Read the data for the request */
+        if ((ret = httpd_req_recv(req, buf, recv_data_length)) <= 0)
+        { /* 0 return value indicates connection closed */
+            if (ret == HTTPD_SOCK_ERR_TIMEOUT)
+            {
+                /* Retry receiving if timeout occurred */
+                httpd_resp_send_408(req);
+            }
+            /* In case of error, returning ESP_FAIL will
+            * ensure that the underlying socket is closed */
+            return ESP_FAIL;
+        }
+
+        /* Log data received */
+        ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
+        ESP_LOGI(TAG, "%.*s", ret, buf);
+        ESP_LOGI(TAG, "====================================");
+
+        cJSON *json_data = NULL;
+        
+        if(RSA_ENCRYPTION){
+            unsigned char decrypted_data[100];
+            size_t decrypted_data_length;
+            size_t encrypted_data_length;
+            decrypt_rsa_by_pot_key((unsigned char *)buf, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+            json_data = cJSON_Parse((char *)decrypted_data);
+        }
+        else{
+            json_data = cJSON_Parse(buf);
+        }
+        /* Parse JSON data */
+        
+        if (json_data == NULL)
+        {
+            ESP_LOGE(TAG, "Failed to parse JSON data");
+            http_error_handler(req, HTTPD_400_BAD_REQUEST);
+        }
+
+        /* Retrieve values from JSON */
+        cJSON *cred1 = cJSON_GetObjectItemCaseSensitive(json_data, "cred1");
+        cJSON *cred2 = cJSON_GetObjectItemCaseSensitive(json_data, "cred2");
+
+        /* Log parsed values */
+        char SSID[32] = "";
+        char PASS[32] = "";
+        if (cJSON_IsString(cred1) && cJSON_IsString(cred2))
+        {
+            strcpy(SSID, cred1->valuestring);
+            strcpy(PASS, cred2->valuestring);
+            ESP_LOGI(TAG, "creds saved");
+            // ESP_LOGI(TAG, "cred1: %s", cred1->valuestring);
+            // ESP_LOGI(TAG, "cred2: %s", cred2->valuestring);
+
+        }
+        else
+        {
+            ESP_LOGE(TAG, "Failed to retrieve values from JSON");
+            http_error_handler(req, HTTPD_400_BAD_REQUEST);
+        }
+
+        /* Free allocated JSON object */
+        cJSON_Delete(json_data);
+
+        //httpd_resp_send_chunk(req, NULL, 0);
+
+
+        write_flash_str("AP_data", "AP_SSID", SSID);
+        write_flash_str("AP_data", "AP_PASS", PASS);
+
+        httpd_resp_set_status(req, HTTPD_200);
+        char suuid_str[9];
+        get_suuid_str(suuid_str);
+        httpd_resp_set_hdr(req, "UUID", suuid_str);
+        httpd_resp_send_chunk(req, NULL, 0);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        esp_restart();
+    }
+    return ESP_OK;
+}
 
 // esp_err_t encode_test_p_handler(httpd_req_t *req)
 // {
@@ -616,121 +794,121 @@ esp_err_t pub_key_get_p_handler(httpd_req_t *req)
 // }
 
 
-esp_err_t encode_test_p_handler(httpd_req_t *req)
-{
-    if (authentication(req)) //authentication
-    {
-        char buf[600];
-        int ret = 1, actual_length = req->content_len;
-        if (actual_length > sizeof(buf))
-        {
-            http_error_handler(req, HTTPD_400_BAD_REQUEST);
-        }
-        int recv_data_length = MIN(actual_length, sizeof(buf));
+// esp_err_t encode_test_p_handler(httpd_req_t *req)
+// {
+//     if (authentication(req)) //authentication
+//     {
+//         char buf[600];
+//         int ret = 1, actual_length = req->content_len;
+//         if (actual_length > sizeof(buf))
+//         {
+//             http_error_handler(req, HTTPD_400_BAD_REQUEST);
+//         }
+//         int recv_data_length = MIN(actual_length, sizeof(buf));
 
-        /* Read the data for the request */
-        if ((ret = httpd_req_recv(req, buf, recv_data_length)) <= 0)
-        { /* 0 return value indicates connection closed */
-            if (ret == HTTPD_SOCK_ERR_TIMEOUT)
-            {
-                /* Retry receiving if timeout occurred */
-                httpd_resp_send_408(req);
-            }
-            /* In case of error, returning ESP_FAIL will
-             * ensure that the underlying socket is closed */
-            return ESP_FAIL;
-        }
+//         /* Read the data for the request */
+//         if ((ret = httpd_req_recv(req, buf, recv_data_length)) <= 0)
+//         { /* 0 return value indicates connection closed */
+//             if (ret == HTTPD_SOCK_ERR_TIMEOUT)
+//             {
+//                 /* Retry receiving if timeout occurred */
+//                 httpd_resp_send_408(req);
+//             }
+//             /* In case of error, returning ESP_FAIL will
+//              * ensure that the underlying socket is closed */
+//             return ESP_FAIL;
+//         }
 
-        /* Log data received */
-        ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
-        ESP_LOGI(TAG, "%.*s", ret, buf);
-        ESP_LOGI(TAG, "====================================");
+//         /* Log data received */
+//         ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
+//         ESP_LOGI(TAG, "%.*s", ret, buf);
+//         ESP_LOGI(TAG, "====================================");
 
-        unsigned char decrypted_data[512];
-        unsigned char *binary_data;
-        size_t binary_length;
-
-
-        size_t decrypted_data_length;
-        size_t encrypted_data_length;
-        decrypt_rsa_by_pot_key((unsigned char *)buf, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+//         unsigned char decrypted_data[512];
+//         unsigned char *binary_data;
+//         size_t binary_length;
 
 
-        // int result = hex_to_bytes(buf, &binary_data, &binary_length);
-        // if (result == 0)
-        // {
-            // size_t decrypted_data_length;
-            // size_t encrypted_data_length;
-            // decrypt_rsa_by_pot_key((unsigned char *)binary_data, &encrypted_data_length, decrypted_data, &decrypted_data_length);
-            // free(binary_data);
-        // }
-        // else
-        // {
-        //     // Obsługa błędu konwersji z heksa na binarne
-        //     fprintf(stderr, "Błąd konwersji: %d\n", result);
-        // }
-
-        /* Free allocated JSON object */
-        httpd_resp_set_status(req, HTTPD_200);
-        char *response = "poki co nic"; //generacja
-        cJSON *json_resp = cJSON_CreateObject();
-        cJSON_AddStringToObject(json_resp, "response", response);
-        char *resp_str = cJSON_PrintUnformatted(json_resp);
-        cJSON_Delete(json_resp);
-        // char suuid_str[9];
-        // get_suuid_str(suuid_str);
-        // httpd_resp_set_hdr(req, "UUID", suuid_str);
-        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
-    }
-    return ESP_OK;
-}
-
-esp_err_t decode_test_p_handler(httpd_req_t *req)
-{
-    if (true) //authentication
-    {
-        char buf[60];
-        int ret = 1, actual_length = req->content_len;
-        if (actual_length > sizeof(buf))
-        {
-            http_error_handler(req, HTTPD_400_BAD_REQUEST);
-        }
-        int recv_data_length = MIN(actual_length, sizeof(buf));
-
-        /* Read the data for the request */
-        if ((ret = httpd_req_recv(req, buf, recv_data_length)) <= 0)
-        { /* 0 return value indicates connection closed */
-            if (ret == HTTPD_SOCK_ERR_TIMEOUT)
-            {
-                /* Retry receiving if timeout occurred */
-                httpd_resp_send_408(req);
-            }
-            /* In case of error, returning ESP_FAIL will
-             * ensure that the underlying socket is closed */
-            return ESP_FAIL;
-        }
-
-        /* Log data received */
-        ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
-        ESP_LOGI(TAG, "%.*s", ret, buf);
-        ESP_LOGI(TAG, "====================================");
+//         size_t decrypted_data_length;
+//         size_t encrypted_data_length;
+//         decrypt_rsa_by_pot_key((unsigned char *)buf, &encrypted_data_length, decrypted_data, &decrypted_data_length);
 
 
-        cJSON *json_resp = cJSON_CreateObject();
-        cJSON_AddStringToObject(json_resp, "odp", "zaszyfrowanko");
-        char *resp_str = cJSON_PrintUnformatted(json_resp);
+//         // int result = hex_to_bytes(buf, &binary_data, &binary_length);
+//         // if (result == 0)
+//         // {
+//             // size_t decrypted_data_length;
+//             // size_t encrypted_data_length;
+//             // decrypt_rsa_by_pot_key((unsigned char *)binary_data, &encrypted_data_length, decrypted_data, &decrypted_data_length);
+//             // free(binary_data);
+//         // }
+//         // else
+//         // {
+//         //     // Obsługa błędu konwersji z heksa na binarne
+//         //     fprintf(stderr, "Błąd konwersji: %d\n", result);
+//         // }
+
+//         /* Free allocated JSON object */
+//         httpd_resp_set_status(req, HTTPD_200);
+//         char *response = "poki co nic"; //generacja
+//         cJSON *json_resp = cJSON_CreateObject();
+//         cJSON_AddStringToObject(json_resp, "response", response);
+//         char *resp_str = cJSON_PrintUnformatted(json_resp);
+//         cJSON_Delete(json_resp);
+//         // char suuid_str[9];
+//         // get_suuid_str(suuid_str);
+//         // httpd_resp_set_hdr(req, "UUID", suuid_str);
+//         httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+//     }
+//     return ESP_OK;
+// }
+
+// esp_err_t decode_test_p_handler(httpd_req_t *req)
+// {
+//     if (true) //authentication
+//     {
+//         char buf[60];
+//         int ret = 1, actual_length = req->content_len;
+//         if (actual_length > sizeof(buf))
+//         {
+//             http_error_handler(req, HTTPD_400_BAD_REQUEST);
+//         }
+//         int recv_data_length = MIN(actual_length, sizeof(buf));
+
+//         /* Read the data for the request */
+//         if ((ret = httpd_req_recv(req, buf, recv_data_length)) <= 0)
+//         { /* 0 return value indicates connection closed */
+//             if (ret == HTTPD_SOCK_ERR_TIMEOUT)
+//             {
+//                 /* Retry receiving if timeout occurred */
+//                 httpd_resp_send_408(req);
+//             }
+//             /* In case of error, returning ESP_FAIL will
+//              * ensure that the underlying socket is closed */
+//             return ESP_FAIL;
+//         }
+
+//         /* Log data received */
+//         ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
+//         ESP_LOGI(TAG, "%.*s", ret, buf);
+//         ESP_LOGI(TAG, "====================================");
 
 
-        char hex_string[513];
-        encrypt_by_s_key(hex_string, resp_str);
-        printf("Zaszyfrowany tekst: %s\n", hex_string);
-        cJSON_Delete(json_resp);
+//         cJSON *json_resp = cJSON_CreateObject();
+//         cJSON_AddStringToObject(json_resp, "odp", "zaszyfrowanko");
+//         char *resp_str = cJSON_PrintUnformatted(json_resp);
 
-        httpd_resp_set_status(req, HTTPD_200);
-        char suuid_str[9];
-        get_suuid_str(suuid_str);
-        httpd_resp_set_hdr(req, "UUID", suuid_str);
-        httpd_resp_send(req, hex_string, HTTPD_RESP_USE_STRLEN);
-    }
-    return ESP_OK;
-}
+
+//         char hex_string[513];
+//         encrypt_by_s_key(hex_string, resp_str);
+//         printf("Zaszyfrowany tekst: %s\n", hex_string);
+//         cJSON_Delete(json_resp);
+
+//         httpd_resp_set_status(req, HTTPD_200);
+//         char suuid_str[9];
+//         get_suuid_str(suuid_str);
+//         httpd_resp_set_hdr(req, "UUID", suuid_str);
+//         httpd_resp_send(req, hex_string, HTTPD_RESP_USE_STRLEN);
+//     }
+//     return ESP_OK;
+// }

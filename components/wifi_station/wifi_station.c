@@ -39,7 +39,7 @@ void wifi_init_sta(void)
     char *AP_PASS = read_flash_str("AP_data", "AP_PASS");
 
     ESP_LOGI(TAG, "access point: %s", AP_SSID);
-    ESP_LOGI(TAG, "Pass station: %s", AP_PASS);
+    // ESP_LOGI(TAG, "Pass station: %s", AP_PASS);
 
     strncpy((char *)wifi_config.sta.ssid, AP_SSID, sizeof(wifi_config.sta.ssid));
     strncpy((char *)wifi_config.sta.password, AP_PASS, sizeof(wifi_config.sta.password));
