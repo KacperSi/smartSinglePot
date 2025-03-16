@@ -38,3 +38,7 @@ As an additional layer of security, the system requires a **BLE key exchange**. 
 
 ## Future Enhancements
 - Mobile app integration for easier control.
+
+# Visualisation
+![donica_zlozenie](https://github.com/user-attachments/assets/93a9ee72-55b2-4223-8f34-9c982b7d83b5)
+
