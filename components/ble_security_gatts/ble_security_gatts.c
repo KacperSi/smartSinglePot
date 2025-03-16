@@ -24,7 +24,7 @@ extern uint8_t sUUIDValue[4];
 #define AUTH2UUID_PROFILE_NUM                         1
 #define AUTH2UUID_PROFILE_APP_IDX                     0
 #define ESP_AUTH2UUID_RATE_APP_ID                     0x55
-#define EXAMPLE_DEVICE_NAME                       "ESP_BLE_SECURITY"
+#define EXAMPLE_DEVICE_NAME                       "singlePot862301"
 #define AUTH2UUID_RATE_SVC_INST_ID                    0
 
 #define ADV_CONFIG_FLAG                           (1 << 0)

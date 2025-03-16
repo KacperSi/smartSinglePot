@@ -202,7 +202,11 @@ esp_err_t set_watering_handler_station(httpd_req_t *req)
         get_suuid_str(suuid_str);
         httpd_resp_set_hdr(req, "UUID", suuid_str);
         httpd_resp_set_status(req, HTTPD_200);
-        httpd_resp_send_chunk(req, NULL, 0);
+        cJSON *json_resp = cJSON_CreateObject();
+        cJSON_AddStringToObject(json_resp, "additional_info", "-");
+        char *resp_str = cJSON_PrintUnformatted(json_resp);
+        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        cJSON_Delete(json_data);
     }
     return ESP_OK;
 }
@@ -374,7 +378,11 @@ esp_err_t set_watering_settings_handler_station(httpd_req_t *req)
         get_suuid_str(suuid_str);
         httpd_resp_set_hdr(req, "UUID", suuid_str);
         httpd_resp_set_status(req, HTTPD_200);
-        httpd_resp_send_chunk(req, NULL, 0);
+        cJSON *json_resp = cJSON_CreateObject();
+        cJSON_AddStringToObject(json_resp, "additional_info", "-");
+        char *resp_str = cJSON_PrintUnformatted(json_resp);
+        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        cJSON_Delete(json_data);
     }
     return ESP_OK;
 }
@@ -491,7 +499,11 @@ esp_err_t change_pass_handler(httpd_req_t *req)
         get_suuid_str(suuid_str);
         httpd_resp_set_hdr(req, "UUID", suuid_str);
         httpd_resp_set_status(req, HTTPD_200);
-        httpd_resp_send_chunk(req, NULL, 0);
+        cJSON *json_resp = cJSON_CreateObject();
+        cJSON_AddStringToObject(json_resp, "additional_info", "-");
+        char *resp_str = cJSON_PrintUnformatted(json_resp);
+        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        cJSON_Delete(json_data);
 
 
         write_flash_str("BASIC_CRED", "username", USERNAME);

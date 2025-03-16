@@ -10,6 +10,7 @@
 #include "auth2uuid.h"
 #include "freertos/task.h"
 #include "rsa_operations.h"
+#include "gpio_config.h"
 
 static const char *TAG = "wifi_manager";
 
@@ -17,6 +18,7 @@ extern void get_suuid_str(char *suuid_str);
 extern bool auth2uuid_authentication(httpd_req_t *req);
 extern bool basic_authentication(httpd_req_t *req);
 extern esp_err_t http_error_handler(httpd_req_t *req, httpd_err_code_t err);
+extern void AP_deactivate();
 
 bool authentication_2f(httpd_req_t *req){
     if(BASIC_AUTH_MODE_RET && UUID_AUTH_MODE_RET){
@@ -88,8 +90,8 @@ esp_err_t set_wifi_post_handler(httpd_req_t *req)
             strcpy(SSID, cred1->valuestring);
             strcpy(PASS, cred2->valuestring);
             ESP_LOGI(TAG, "creds saved");
-            // ESP_LOGI(TAG, "cred1: %s", cred1->valuestring);
-            // ESP_LOGI(TAG, "cred2: %s", cred2->valuestring);
+            ESP_LOGI(TAG, "cred1: %s", cred1->valuestring);
+            ESP_LOGI(TAG, "cred2: %s", cred2->valuestring);
 
         }
         else
@@ -111,9 +113,13 @@ esp_err_t set_wifi_post_handler(httpd_req_t *req)
         char suuid_str[9];
         get_suuid_str(suuid_str);
         httpd_resp_set_hdr(req, "UUID", suuid_str);
-        httpd_resp_send_chunk(req, NULL, 0);
+        cJSON *json_resp = cJSON_CreateObject();
+        cJSON_AddStringToObject(json_resp, "additional_info", "-");
+        char *resp_str = cJSON_PrintUnformatted(json_resp);
+        httpd_resp_send(req, resp_str, HTTPD_RESP_USE_STRLEN);
+        cJSON_Delete(json_data);
         vTaskDelay(pdMS_TO_TICKS(2000));
-        esp_restart();
+        AP_deactivate();
     }
     return ESP_OK;
 }

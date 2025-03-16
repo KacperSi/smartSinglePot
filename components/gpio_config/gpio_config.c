@@ -52,14 +52,14 @@ static void water_level_handler(int state){
     }
 }
 
-static void AP_activate(){
+void AP_activate(){
     ESP_LOGI(TAG, "Access Point mode activation");
     save_flash_bool("modes", "ap_mode", true);
     vTaskDelay(pdMS_TO_TICKS(500));
     esp_restart();
 }
 
-static void AP_deactivate(){
+void AP_deactivate(){
     ESP_LOGI(TAG, "Access Point mode deactivation");
     save_flash_bool("modes", "ap_mode", false);
     vTaskDelay(pdMS_TO_TICKS(2000));

@@ -5,7 +5,7 @@
 
 #define ESP_DEVICE_ID      CONFIG_ESP_DEVICE_ID
 #define DEVICE_HOSTNAME_RET      CONFIG_DEVICE_HOSTNAME
-#define BASIC_AUTH_MODE_RET      false
+#define BASIC_AUTH_MODE_RET      true
 #define UUID_AUTH_MODE_RET      false
 
 #ifdef __cplusplus

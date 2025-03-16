@@ -47,6 +47,8 @@ static void bt_pairing_handle(void* arg);
 void watering_timer_callback(TimerHandle_t xTimer);
 void watering_config();
 void gpio_loop();
+void AP_activate();
+void AP_deactivate();
 
 #ifdef __cplusplus
 }
