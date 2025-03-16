@@ -1,56 +1,40 @@
-# Steps:
+# Smart Single Pot
 
-## wifi manager
-AP with http to:
-* configure SSID, password of Wi-Fi
-### Completed:
-* nvs configuration in c++
-* AP configuration in C
-### TO DO:
-* AP configuration in C++
-* endpoint to configure wifi
-* basic authentication of this endpoint
-## http API
-* http API with needed parameters
+## Overview
+Smart Single Pot is an advanced self-watering system that monitors soil moisture levels and automates watering based on real-time data. It also features a **two-factor authentication (2FA) system** for secure remote access, using a **challenge-response mechanism over HTTPS** combined with an additional security key transmitted via **Bluetooth Low Energy (BLE)**.
 
-## After
-* bluetooth connection
-* pairing
-* authentication
-* http authentication
-* gpio logic
-* logs in C++, configurable by CMakeList or component, how in release?
+## Features
+- **Automated Watering**: Monitors soil moisture and waters the plant accordingly.
+- **Remote irrigation control**
+- **Remote reading of soil moisture**
+- **Set watering hours**
+- **Secure Authentication**:
+  - **Challenge-Response Authentication over HTTPS**
+  - **Additional Security Key via BLE**
+- **Remote Monitoring & Control**: View soil moisture levels and control the watering system from a web interface.
+- **Energy Efficient**: Designed to run on low power, making it ideal for long-term use.
 
+## Authentication Mechanism
+### 1. Challenge-Response over HTTPS
+The system uses a **challenge-response mechanism** for authentication when accessing the web interface. A server issues a challenge, which must be signed with the user’s private key before granting access.
 
-# _Sample project_
+### 2. BLE Security Key
+As an additional layer of security, the system requires a **BLE key exchange**. The client must transmit a valid security key via **Bluetooth Low Energy (BLE)** before full access is granted.
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+## Hardware Requirements
+- **ESP32** (or similar microcontroller with Wi-Fi & BLE support)
+- **Soil Moisture Sensor**
+- **Water Pump & Relay Module**
+- **Water Reservoir**
+- **Power Supply (Battery or Adapter)**
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+## Software Requirements
+- **Firmware:** Written in C++ (ESP-IDF framework for ESP32)
 
+## Security Considerations
+- **End-to-End Encryption:** Ensures secure communication between devices.
+- **Time-Limited Authentication:** BLE key exchange must happen within a defined time frame.
+- **Firmware Security:** Secure boot and OTA (Over-the-Air) updates to prevent tampering.
 
-
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
-
-## Example folder contents
-
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
-
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
-
-Below is short explanation of remaining files in the project folder.
-
-```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
-```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+## Future Enhancements
+- Mobile app integration for easier control.
